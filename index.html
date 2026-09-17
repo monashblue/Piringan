@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Piringan — pemutar musik tanpa iklan</title>
+<meta name="description" content="Cari lagu lewat katalog Spotify, putar lewat YouTube. Tanpa iklan, tanpa akun, tanpa data yang disimpan." />
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#241813">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Space+Mono:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="rack">
+  <div class="wordmark">
+    <span class="disc-mark" aria-hidden="true"></span>
+    Piringan
+  </div>
+  <p class="tagline">Cari dari katalog Spotify, dengarkan lewat YouTube. Tanpa iklan, tanpa akun.</p>
+</header>
+
+<main>
+  <section class="search-deck" aria-label="Pencarian lagu">
+    <form id="search-form">
+      <input
+        id="search-input"
+        type="text"
+        name="q"
+        placeholder="judul lagu atau nama artis…"
+        autocomplete="off"
+        aria-label="Kata kunci pencarian"
+      />
+      <button type="submit">Cari</button>
+    </form>
+    <p id="search-status" class="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="results" id="results" aria-label="Hasil pencarian"></section>
+</main>
+
+<footer class="console" id="console">
+  <div class="console-frame">
+
+    <div class="screen-unit">
+      <div class="screen-bezel">
+        <div id="yt-mount"></div>
+        <div class="scanlines" aria-hidden="true"></div>
+      </div>
+      <span class="screen-caption">layar · YouTube</span>
+    </div>
+
+    <div class="lcd-unit">
+      <div class="lcd">
+        <div class="lcd-track">
+          <span id="now-title">belum ada lagu diputar</span>
+        </div>
+        <div class="lcd-sub">
+          <span id="now-artist">—</span>
+        </div>
+        <div class="lcd-time">
+          <span id="time-elapsed">0:00</span>
+          <div class="progress" id="progress" role="slider" aria-label="Posisi lagu" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <span id="time-duration">0:00</span>
+        </div>
+      </div>
+      <div class="vu" id="vu" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="transport-unit">
+      <button id="btn-prev" class="deck-btn" title="Sebelumnya" aria-label="Lagu sebelumnya">⏮</button>
+      <button id="btn-play" class="deck-btn deck-btn--main" title="Putar / Jeda" aria-label="Putar atau jeda">▶</button>
+      <button id="btn-next" class="deck-btn" title="Berikutnya" aria-label="Lagu berikutnya">⏭</button>
+      <div class="volume-unit">
+        <label for="volume" class="knob-label">volume</label>
+        <input type="range" id="volume" min="0" max="100" value="70" />
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="script.js"></script>
+</body>
+</html>

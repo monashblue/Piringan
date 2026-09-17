@@ -1,5 +1,4 @@
 # Piringan
-No coding skills, just AI. Thanks to Claude. An experimental Music Player for Library and Information Science.
 
 Pemutar musik statis dengan tampilan bergaya perangkat hi-fi lama:
 - **Metadata** (judul, artis, album, sampul) diambil dari **Spotify Web API** (pencarian katalog publik, tanpa login).

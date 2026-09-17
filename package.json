@@ -1,0 +1,9 @@
+{
+  "name": "piringan",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pemutar musik statis: metadata dari Spotify, audio dari YouTube (embed resmi). Tanpa iklan, tanpa build step.",
+  "engines": {
+    "node": ">=18"
+  }
+}
