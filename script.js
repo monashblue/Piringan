@@ -1,6 +1,112 @@
 (() => {
   "use strict";
 
+  const playerState = {
+  queue: [],
+  currentIndex: -1,
+
+  shuffle: false,
+  repeat: "off",
+
+  context: "none",
+  playlistId: null
+};
+
+  let currentResults = [];
+
+  function setQueue(tracks, startIndex = 0, context = "search") {
+  playerState.queue = [...tracks];
+  playerState.currentIndex = startIndex;
+  playerState.context = context;
+}
+
+  function getCurrentTrack() {
+  return playerState.queue[playerState.currentIndex] || null;
+}
+
+  function getNextTrack() {
+  if (playerState.queue.length === 0) {
+    return null;
+  }
+
+  if (playerState.currentIndex >= playerState.queue.length - 1) {
+    return null;
+  }
+
+  return playerState.queue[playerState.currentIndex + 1];
+}
+
+  function playTrack(track, options = {}) {
+  const {
+    queue = [track],
+    startIndex = 0,
+    context = "single"
+  } = options;
+
+  setQueue(queue, startIndex, context);
+
+  loadAndPlayTrack(track);
+}
+
+  function playNext() {
+  const queue = playerState.queue;
+
+  if (!queue.length) return;
+
+  // Sequential
+  if (!playerState.shuffle) {
+    if (playerState.currentIndex >= queue.length - 1) {
+      console.log("Queue selesai");
+      return;
+    }
+
+    playerState.currentIndex++;
+  }
+
+  // Shuffle akan kita tambahkan setelah sequential stabil
+
+  const nextTrack = queue[playerState.currentIndex];
+
+  if (nextTrack) {
+    loadAndPlayTrack(nextTrack);
+  }
+}
+
+  if (event.data === YT.PlayerState.ENDED) {
+  playNext();
+}
+
+  function shuffleArray(array) {
+  const result = [...array];
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+}
+
+  function enableShuffle() {
+  const currentTrack = getCurrentTrack();
+
+  const remainingTracks = playerState.queue.filter(
+    (_, index) => index !== playerState.currentIndex
+  );
+
+  const shuffled = shuffleArray(remainingTracks);
+
+  playerState.queue = [
+    currentTrack,
+    ...shuffled
+  ];
+
+  playerState.currentIndex = 0;
+  playerState.shuffle = true;
+}
+
+  
   // ---------- state ----------
   let currentResults = [];   // last search results (Deezer track objects)
   let currentIndex = -1;     // index of playing track within currentResults
