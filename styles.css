@@ -383,6 +383,12 @@ a { color: var(--amber); }
   gap: 8px;
 }
 
+#btn-shuffle.active {
+  color: #1db954;
+  background: rgba(29, 185, 84, 0.15);
+  border-color: #1db954;
+}
+
 .deck-btn {
   width: 40px;
   height: 40px;
