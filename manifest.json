@@ -1,7 +1,7 @@
 {
   "name": "Piringan",
   "short_name": "Piringan",
-  "description": "Cari lagu lewat katalog Spotify, dengarkan lewat YouTube. Tanpa iklan, tanpa akun.",
+  "description": "Cari lagu lewat katalog Deezer, dengarkan lewat YouTube. Tanpa iklan, tanpa akun.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

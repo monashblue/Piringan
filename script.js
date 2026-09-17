@@ -2,7 +2,7 @@
   "use strict";
 
   // ---------- state ----------
-  let currentResults = [];   // last search results (Spotify track objects)
+  let currentResults = [];   // last search results (Deezer track objects)
   let currentIndex = -1;     // index of playing track within currentResults
   let ytPlayer = null;       // YT.Player instance
   let ytReady = false;
@@ -96,7 +96,7 @@
     setStatus("mencari…");
     resultsEl.innerHTML = "";
     try {
-      const res = await fetch(`/api/spotify-search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/deezer-search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Pencarian gagal.");
       currentResults = data.tracks || [];

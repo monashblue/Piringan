@@ -1,13 +1,15 @@
 # Piringan
 
 Pemutar musik statis dengan tampilan bergaya perangkat hi-fi lama:
-- **Metadata** (judul, artis, album, sampul) diambil dari **Spotify Web API** (pencarian katalog publik, tanpa login).
+- **Metadata** (judul, artis, album, sampul) diambil dari **Deezer API** (pencarian katalog publik, gratis, tanpa API key/login sama sekali).
 - **Audio** diputar lewat **YouTube IFrame Player** resmi — video ditampilkan kecil di "layar CRT" di panel pemutar (bukan disembunyikan), karena begitulah cara resmi YouTube mengizinkan pemutaran melalui embed. Tidak ada proses unduh maupun ekstraksi audio di server.
 - Tidak ada iklan, tidak ada akun, tidak ada tracking, tidak ada database — murni halaman statis + dua serverless function kecil di Vercel.
 
 ## Kenapa arsitekturnya begini
 
-Spotify tidak lagi mengizinkan pemutaran full-track lewat Web API tanpa akun Premium + Web Playback SDK (butuh login OAuth per pengguna), dan `preview_url` 30 detik kini seringkali kosong untuk aplikasi baru. Karena itu, audio sebenarnya diambil dari YouTube lewat embed resminya (`youtube.com/iframe_api`), sementara Spotify dipakai murni sebagai sumber metadata yang lebih rapi. Judul lagu + nama artis dari Spotify dipakai sebagai kata kunci untuk mencari video yang paling cocok di YouTube — jadi kecocokan bergantung pada hasil pencarian dan tidak selalu sempurna.
+Awalnya proyek ini memakai Spotify Web API untuk metadata, tapi sejak akhir 2024 Spotify mewajibkan akun **pemilik app** (di Developer Dashboard) punya langganan Premium aktif untuk endpoint `/search` — walau cuma dipakai lewat Client Credentials Flow (tanpa login user sama sekali). Karena syarat itu tidak selalu bisa dipenuhi, metadata diganti ke **Deezer**, yang endpoint pencariannya publik dan tidak mensyaratkan akun/API key apa pun.
+
+Untuk audio: Spotify juga sudah tidak mengizinkan pemutaran full-track lewat Web API tanpa Premium + Web Playback SDK (butuh login OAuth per pengguna), jadi audio sebenarnya tetap diambil dari YouTube lewat embed resminya (`youtube.com/iframe_api`). Judul lagu + nama artis dari Deezer dipakai sebagai kata kunci untuk mencari video yang paling cocok di YouTube — jadi kecocokan bergantung pada hasil pencarian dan tidak selalu sempurna.
 
 ## Struktur file
 
@@ -17,33 +19,29 @@ piringan/
 ├── styles.css           tampilan (tema kayu/kuningan/LCD retro)
 ├── script.js             logika pencarian, pemutaran, kontrol
 ├── api/
-│   ├── spotify-search.js    proxy pencarian Spotify (serverless)
+│   ├── deezer-search.js     proxy pencarian Deezer (serverless)
 │   └── youtube-search.js    proxy pencarian video YouTube (serverless)
-├── lib/
-│   └── spotify-token.js     helper ambil & cache token Spotify
+├── manifest.json         Web App Manifest (untuk PWA/APK)
+├── sw.js                 service worker (cache shell, offline dasar)
+├── icon-*.png            ikon aplikasi
 ├── package.json
 ├── .env.example
 └── .gitignore
 ```
 
-Kredensial (Client Secret Spotify, API key YouTube) **hanya** dipakai di dalam fungsi serverless (`/api/*`), tidak pernah dikirim ke browser.
+Deezer tidak butuh kredensial sama sekali. API key YouTube **hanya** dipakai di dalam fungsi serverless (`/api/youtube-search.js`), tidak pernah dikirim ke browser.
 
 ## Persiapan kredensial
 
-1. **Spotify**
-   - Buka [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → *Create app*.
-   - Isi nama/deskripsi bebas. Redirect URI boleh diisi apa saja (misal `http://localhost:3000`) karena aplikasi ini hanya memakai *Client Credentials Flow* (akses data publik, tanpa login pengguna).
-   - Catat **Client ID** dan **Client Secret**.
+Hanya satu yang dibutuhkan:
 
-2. **YouTube**
-   - Buka [console.cloud.google.com](https://console.cloud.google.com) → buat project → aktifkan **YouTube Data API v3**.
-   - Buat **API key** di menu Credentials. Sebaiknya batasi key tersebut hanya untuk API ini di pengaturan pembatasan.
+- **YouTube**: buka [console.cloud.google.com](https://console.cloud.google.com) → buat project → aktifkan **YouTube Data API v3** → buat **API key** di menu Credentials. Sebaiknya batasi key tersebut hanya untuk API ini di pengaturan pembatasan.
 
 ## Menjalankan secara lokal
 
 ```bash
 npm install -g vercel   # jika belum ada
-cp .env.example .env    # lalu isi tiga variabel di dalamnya
+cp .env.example .env    # lalu isi YOUTUBE_API_KEY
 vercel dev
 ```
 
@@ -51,10 +49,7 @@ vercel dev
 
 1. Push folder ini ke sebuah repo GitHub.
 2. Di [vercel.com/new](https://vercel.com/new), import repo tersebut (framework preset: **Other** — tidak perlu build command, tidak perlu output directory khusus).
-3. Di **Project Settings → Environment Variables**, tambahkan:
-   - `SPOTIFY_CLIENT_ID`
-   - `SPOTIFY_CLIENT_SECRET`
-   - `YOUTUBE_API_KEY`
+3. Di **Project Settings → Environment Variables**, tambahkan `YOUTUBE_API_KEY`.
 4. Deploy. Vercel otomatis mendeteksi `index.html` sebagai halaman statis dan folder `api/` sebagai serverless functions.
 
 ## Membungkus jadi APK Android (opsional)
@@ -75,4 +70,4 @@ Catatan: pemutaran video YouTube di dalam WebView/TWA berperilaku sama seperti d
 
 - Kuota gratis YouTube Data API adalah 10.000 unit/hari; setiap pencarian memakai ±100 unit, jadi cukup untuk ±100 pencarian/hari sebelum kena limit.
 - Karena pencarian video dilakukan otomatis berdasarkan judul+artis, sesekali video yang terpilih mungkin bukan versi audio resmi/terbaik — bisa disesuaikan lagi logikanya di `playTrackAt()` pada `script.js` bila mau menambah, misalnya, penyaringan tambahan.
-- Ini proyek untuk pemakaian pribadi/pembelajaran; pastikan pemakaian kredensial Spotify dan YouTube-mu tetap mengikuti ketentuan layanan masing-masing.
+- Ini proyek untuk pemakaian pribadi/pembelajaran; pastikan pemakaian API Deezer dan YouTube-mu tetap mengikuti ketentuan layanan masing-masing.
