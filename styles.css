@@ -432,6 +432,23 @@ a { color: var(--amber); }
   accent-color: var(--amber);
 }
 
+/* ---------- transport active states ---------- */
+
+#btn-shuffle.active,
+#btn-repeat.active {
+  color: var(--wood-dark);
+  background: linear-gradient(
+    180deg,
+    var(--amber),
+    var(--amber-dim)
+  );
+  border-color: var(--amber);
+  box-shadow:
+    0 0 0 1px var(--amber-dim),
+    0 2px 0 rgba(0,0,0,0.4),
+    0 0 8px rgba(232,150,60,0.18);
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
   .console-frame {
