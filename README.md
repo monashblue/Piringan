@@ -31,6 +31,19 @@ piringan/
 
 Deezer tidak butuh kredensial sama sekali. API key YouTube **hanya** dipakai di dalam fungsi serverless (`/api/youtube-search.js`), tidak pernah dikirim ke browser.
 
+## Kombinasi shuffle x repeat
+
+Ada 6 kombinasi utama, yang pasti gw juga ga ngerti maksudnya apaan
+| # | Shuffle | Repeat | Perilaku                                       |
+| - | ------- | ------ | ---------------------------------------------- |
+| 1 | OFF     | OFF    | Urut → berhenti                                |
+| 2 | OFF     | ALL    | Urut → kembali ke awal                         |
+| 3 | OFF     | ONE    | Lagu yang sama terus                           |
+| 4 | ON      | OFF    | Acak tanpa pengulangan → berhenti              |
+| 5 | ON      | ALL    | Acak tanpa pengulangan → buat siklus acak baru |
+| 6 | ON      | ONE    | Lagu yang sedang diputar diulang terus         |
+
+
 ## Persiapan kredensial
 
 Hanya satu yang dibutuhkan:
