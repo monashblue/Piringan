@@ -60,10 +60,12 @@
   const progressFill = document.getElementById("progress-fill");
   const vuEl = document.getElementById("vu");
 
+  const btnRepeat = document.getElementById("btn-repeat");
   const btnPrev = document.getElementById("btn-prev");
   const btnPlay = document.getElementById("btn-play");
   const btnNext = document.getElementById("btn-next");
   const volumeEl = document.getElementById("volume");
+  const btnShuffle = document.getElementById("btn-shuffle");
 
   // ---------- helpers ----------
   function formatTime(seconds) {
