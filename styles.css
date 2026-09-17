@@ -492,3 +492,63 @@ a { color: var(--amber); }
   outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
+
+.transport-unit .deck-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--metal);
+  background: linear-gradient(
+    180deg,
+    var(--metal-light),
+    var(--metal)
+  );
+  color: var(--wood-dark);
+  font-size: 1rem;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.transport-unit .deck-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.transport-unit .deck-btn--main {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(
+    180deg,
+    var(--amber),
+    var(--amber-dim)
+  );
+  color: var(--wood-dark);
+  font-size: 1.1rem;
+}
+
+#btn-shuffle.active,
+#btn-repeat.active {
+  color: var(--wood-dark);
+  background: linear-gradient(
+    180deg,
+    var(--amber),
+    var(--amber-dim)
+  );
+  border-color: var(--amber);
+  box-shadow:
+    0 0 0 1px var(--amber-dim),
+    0 2px 0 rgba(0, 0, 0, 0.4),
+    0 0 8px rgba(232, 150, 60, 0.18);
+}
