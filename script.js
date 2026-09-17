@@ -6,6 +6,10 @@
     "active",
     playerState.shuffle
   );
+
+     btnShuffle.title = playerState.shuffle
+    ? "Shuffle: aktif"
+    : "Shuffle: mati";
 }
 
   function updateRepeatButton() {
@@ -13,18 +17,21 @@
 
   if (playerState.repeat === "off") {
     btnRepeat.textContent = "🔁";
+    btnRepeat.title = "Repeat: mati";
     return;
   }
 
   if (playerState.repeat === "all") {
     btnRepeat.textContent = "🔁";
     btnRepeat.classList.add("active");
+    btnRepeat.title = "Repeat: semua lagu";
     return;
   }
 
   if (playerState.repeat === "one") {
     btnRepeat.textContent = "🔂";
     btnRepeat.classList.add("active");
+    btnRepeat.title = "Repeat: satu lagu";
   }
 }
 
