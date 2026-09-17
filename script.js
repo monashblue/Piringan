@@ -1,118 +1,50 @@
 (() => {
   "use strict";
 
-  const playerState = {
-  queue: [],
-  currentIndex: -1,
-
-  shuffle: false,
-  repeat: "off",
-
-  context: "none",
-  playlistId: null
-};
-
-  let currentResults = [];
-
-  function setQueue(tracks, startIndex = 0, context = "search") {
-  playerState.queue = [...tracks];
-  playerState.currentIndex = startIndex;
-  playerState.context = context;
-}
-
-  function getCurrentTrack() {
-  return playerState.queue[playerState.currentIndex] || null;
-}
-
-  function getNextTrack() {
-  if (playerState.queue.length === 0) {
-    return null;
-  }
-
-  if (playerState.currentIndex >= playerState.queue.length - 1) {
-    return null;
-  }
-
-  return playerState.queue[playerState.currentIndex + 1];
-}
-
-  function playTrack(track, options = {}) {
-  const {
-    queue = [track],
-    startIndex = 0,
-    context = "single"
-  } = options;
-
-  setQueue(queue, startIndex, context);
-
-  loadAndPlayTrack(track);
-}
-
-  function playNext() {
-  const queue = playerState.queue;
-
-  if (!queue.length) return;
-
-  // Sequential
-  if (!playerState.shuffle) {
-    if (playerState.currentIndex >= queue.length - 1) {
-      console.log("Queue selesai");
-      return;
-    }
-
-    playerState.currentIndex++;
-  }
-
-  // Shuffle akan kita tambahkan setelah sequential stabil
-
-  const nextTrack = queue[playerState.currentIndex];
-
-  if (nextTrack) {
-    loadAndPlayTrack(nextTrack);
-  }
-}
-
-  if (event.data === YT.PlayerState.ENDED) {
-  playNext();
-}
-
-  function shuffleArray(array) {
-  const result = [...array];
-
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-
-  return result;
-}
-
-  function enableShuffle() {
-  const currentTrack = getCurrentTrack();
-
-  const remainingTracks = playerState.queue.filter(
-    (_, index) => index !== playerState.currentIndex
+  function updateShuffleButton() {
+  shuffleBtn.classList.toggle(
+    "active",
+    playerState.shuffle
   );
+}
 
-  const shuffled = shuffleArray(remainingTracks);
+  const PLAYLIST_STORAGE_KEY = "piringan_playlists";
 
-  playerState.queue = [
-    currentTrack,
-    ...shuffled
-  ];
+  function getPlaylists() {
+  try {
+    return JSON.parse(
+      localStorage.getItem(PLAYLIST_STORAGE_KEY)
+    ) || [];
+  } catch (error) {
+    console.error("Failed to read playlists:", error);
+    return [];
+  }
+}
 
-  playerState.currentIndex = 0;
-  playerState.shuffle = true;
+  function savePlaylists(playlists) {
+  localStorage.setItem(
+    PLAYLIST_STORAGE_KEY,
+    JSON.stringify(playlists)
+  );
 }
 
   
+
+  
   // ---------- state ----------
-  let currentResults = [];   // last search results (Deezer track objects)
-  let currentIndex = -1;     // index of playing track within currentResults
-  let ytPlayer = null;       // YT.Player instance
+  let currentResults = [];   // hasil pencarian, BUKAN queue player
+  let ytPlayer = null;
   let ytReady = false;
   let progressTimer = null;
+  
+  const playerState = {
+  queue: [],
+  currentIndex: -1,
+  shuffle: false,
+  repeat: "off",
+  context: "none",
+  playlistId: null
+};
 
   // ---------- dom ----------
   const form = document.getElementById("search-form");
@@ -144,6 +76,17 @@
   function setStatus(text) {
     statusEl.textContent = text;
   }
+
+  function setQueue(tracks, startIndex = 0, context = "search") {
+  playerState.queue = [...tracks];
+  playerState.currentIndex = startIndex;
+  playerState.context = context;
+  playerState.playlistId = null;
+}
+
+function getCurrentTrack() {
+  return playerState.queue[playerState.currentIndex] || null;
+}
 
   function renderResults(tracks) {
     resultsEl.innerHTML = "";
@@ -193,7 +136,7 @@
 
   function highlightActiveRow() {
     document.querySelectorAll(".track-row").forEach((row) => {
-      row.classList.toggle("is-active", Number(row.dataset.index) === currentIndex);
+      row.classList.toggle("is-active", Number(row.dataset.index) === playerState.currentIndex;
     });
   }
 
@@ -248,8 +191,10 @@
 
   // ---------- playback ----------
   async function playTrackAt(index) {
-    const track = currentResults[index];
-    if (!track) return;
+  const track = currentResults[index];
+  if (!track) return;
+
+  setQueue(currentResults, index, "search");
 
     currentIndex = index;
     highlightActiveRow();
@@ -339,16 +284,67 @@
   }
 
   function playNext() {
-    if (!currentResults.length) return;
-    const next = (currentIndex + 1) % currentResults.length;
-    playTrackAt(next);
+  const queue = playerState.queue;
+
+  if (!queue.length) return;
+
+  if (playerState.currentIndex >= queue.length - 1) {
+    console.log("Queue selesai");
+    return;
   }
 
-  function playPrev() {
-    if (!currentResults.length) return;
-    const prev = (currentIndex - 1 + currentResults.length) % currentResults.length;
-    playTrackAt(prev);
+  playerState.currentIndex++;
+
+  const nextTrack = queue[playerState.currentIndex];
+
+  if (nextTrack) {
+    playCurrentQueueTrack();
   }
+}
+
+  function playCurrentQueueTrack() {
+  const track = getCurrentTrack();
+  if (!track) return;
+
+  nowTitle.textContent = track.name;
+  nowArtist.textContent = track.artists;
+  timeDuration.textContent = formatTime(track.durationMs / 1000);
+  timeElapsed.textContent = "0:00";
+  progressFill.style.width = "0%";
+
+  setStatus(`memuat "${track.name}"…`);
+
+  const query = `${track.artists} ${track.name} audio`;
+
+  fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
+    .then(async (res) => {
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Video tidak ditemukan.");
+      }
+
+      loadIntoPlayer(data.videoId);
+      setStatus(`memutar dari YouTube · ${data.channelTitle}`);
+    })
+    .catch((err) => {
+      setStatus(err.message || "Gagal memuat audio dari YouTube.");
+    });
+}
+
+  function playPrev() {
+  const queue = playerState.queue;
+
+  if (!queue.length) return;
+
+  if (playerState.currentIndex <= 0) {
+    return;
+  }
+
+  playerState.currentIndex--;
+
+  playCurrentQueueTrack();
+}
 
   // ---------- transport controls ----------
   btnPlay.addEventListener("click", () => {
