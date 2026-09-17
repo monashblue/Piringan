@@ -135,10 +135,13 @@ function getCurrentTrack() {
   }
 
   function highlightActiveRow() {
-    document.querySelectorAll(".track-row").forEach((row) => {
-      row.classList.toggle("is-active", Number(row.dataset.index) === playerState.currentIndex;
-    });
-  }
+  document.querySelectorAll(".track-row").forEach((row) => {
+    row.classList.toggle(
+      "is-active",
+      Number(row.dataset.index) === playerState.currentIndex
+    );
+  });
+}
 
   // ---------- search ----------
   async function fetchTracks(source, query) {
@@ -166,7 +169,7 @@ function getCurrentTrack() {
       }
 
       currentResults = tracks;
-      currentIndex = -1;
+      playerState.currentIndex = -1;
 
       if (!tracks.length) {
         setStatus("");
@@ -195,8 +198,8 @@ function getCurrentTrack() {
   if (!track) return;
 
   setQueue(currentResults, index, "search");
-
-    currentIndex = index;
+    
+    playerState.currentIndex = index;
     highlightActiveRow();
     nowTitle.textContent = track.name;
     nowArtist.textContent = track.artists;
@@ -282,24 +285,32 @@ function getCurrentTrack() {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = null;
   }
-
+  
   function playNext() {
   const queue = playerState.queue;
 
   if (!queue.length) return;
 
+  // Jika sudah di lagu terakhir, berhenti
   if (playerState.currentIndex >= queue.length - 1) {
-    console.log("Queue selesai");
+    console.log("Sudah di lagu terakhir. Playback berhenti.");
+
+    if (ytPlayer) {
+      ytPlayer.stopVideo();
+    }
+
+    updatePlayIcon(false);
+    vuEl.classList.remove("is-playing");
+    stopProgressLoop();
+
     return;
   }
 
+  // Pindah ke lagu berikutnya
   playerState.currentIndex++;
 
-  const nextTrack = queue[playerState.currentIndex];
-
-  if (nextTrack) {
-    playCurrentQueueTrack();
-  }
+  highlightActiveRow();
+  playCurrentQueueTrack();
 }
 
   function playCurrentQueueTrack() {
@@ -343,6 +354,7 @@ function getCurrentTrack() {
 
   playerState.currentIndex--;
 
+  highlightActiveRow();
   playCurrentQueueTrack();
 }
 
