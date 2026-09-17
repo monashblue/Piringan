@@ -61,13 +61,14 @@
   let ytReady = false;
   let progressTimer = null;
   
- const playerState = {
+  const playerState = {
   queue: [],
   currentIndex: -1,
 
   shuffle: false,
   shuffleQueue: [],
   shuffleHistory: [],
+  shuffleHistoryIndex: -1,
 
   repeat: "off",
   context: "none",
@@ -114,7 +115,9 @@
   playerState.playlistId = null;
 
   playerState.shuffleQueue = [];
+
   playerState.shuffleHistory = [startIndex];
+  playerState.shuffleHistoryIndex = 0;
 
   if (playerState.shuffle) {
     buildShuffleQueue();
@@ -372,13 +375,19 @@ function getCurrentTrack() {
   // =========================
   if (playerState.shuffle) {
 
-    // Kalau masih ada lagu yang belum dimainkan
-    if (playerState.shuffleQueue.length > 0) {
-      const nextIndex = playerState.shuffleQueue.shift();
+    // ---------------------------------
+    // Masih ada history di depan
+    // ---------------------------------
+    if (
+      playerState.shuffleHistoryIndex <
+      playerState.shuffleHistory.length - 1
+    ) {
+      playerState.shuffleHistoryIndex++;
 
-      playerState.currentIndex = nextIndex;
-
-      playerState.shuffleHistory.push(nextIndex);
+      playerState.currentIndex =
+        playerState.shuffleHistory[
+          playerState.shuffleHistoryIndex
+        ];
 
       highlightActiveRow();
       playCurrentQueueTrack();
@@ -386,19 +395,42 @@ function getCurrentTrack() {
       return;
     }
 
-    // =========================
-    // SHUFFLE + REPEAT ALL
-    // =========================
-    if (playerState.repeat === "all") {
+    // ---------------------------------
+    // Ambil lagu baru dari shuffle queue
+    // ---------------------------------
+    if (playerState.shuffleQueue.length > 0) {
+      const nextIndex =
+        playerState.shuffleQueue.shift();
 
+      playerState.currentIndex = nextIndex;
+
+      playerState.shuffleHistory.push(nextIndex);
+
+      playerState.shuffleHistoryIndex =
+        playerState.shuffleHistory.length - 1;
+
+      highlightActiveRow();
+      playCurrentQueueTrack();
+
+      return;
+    }
+
+    // ---------------------------------
+    // SHUFFLE + REPEAT ALL
+    // ---------------------------------
+    if (playerState.repeat === "all") {
       startNewShuffleCycle();
 
       if (playerState.shuffleQueue.length > 0) {
-        const nextIndex = playerState.shuffleQueue.shift();
+        const nextIndex =
+          playerState.shuffleQueue.shift();
 
         playerState.currentIndex = nextIndex;
 
         playerState.shuffleHistory.push(nextIndex);
+
+        playerState.shuffleHistoryIndex =
+          playerState.shuffleHistory.length - 1;
 
         highlightActiveRow();
         playCurrentQueueTrack();
@@ -407,9 +439,9 @@ function getCurrentTrack() {
       }
     }
 
-    // =========================
+    // ---------------------------------
     // SHUFFLE + REPEAT OFF
-    // =========================
+    // ---------------------------------
     stopPlaybackAtEnd();
     return;
   }
@@ -425,6 +457,7 @@ function getCurrentTrack() {
       playerState.currentIndex = 0;
 
       playerState.shuffleHistory = [0];
+      playerState.shuffleHistoryIndex = 0;
 
       highlightActiveRow();
       playCurrentQueueTrack();
@@ -443,6 +476,9 @@ function getCurrentTrack() {
   playerState.shuffleHistory.push(
     playerState.currentIndex
   );
+
+  playerState.shuffleHistoryIndex =
+    playerState.shuffleHistory.length - 1;
 
   highlightActiveRow();
   playCurrentQueueTrack();
@@ -490,7 +526,7 @@ function getCurrentTrack() {
     });
 }
 
-  function playPrev() {
+ function playPrev() {
   const queue = playerState.queue;
 
   if (!queue.length) return;
@@ -500,28 +536,16 @@ function getCurrentTrack() {
   // =========================
   if (playerState.shuffle) {
 
-    // Minimal harus ada lagu sebelum lagu sekarang
-    if (playerState.shuffleHistory.length <= 1) {
+    if (playerState.shuffleHistoryIndex <= 0) {
       return;
     }
 
-    // Buang lagu sekarang dari history
-    playerState.shuffleHistory.pop();
+    playerState.shuffleHistoryIndex--;
 
-    const previousIndex =
+    playerState.currentIndex =
       playerState.shuffleHistory[
-        playerState.shuffleHistory.length - 1
+        playerState.shuffleHistoryIndex
       ];
-
-    playerState.currentIndex = previousIndex;
-
-    // Lagu yang sebelumnya diputar
-    // dimasukkan kembali ke shuffle queue
-    if (
-      !playerState.shuffleQueue.includes(previousIndex)
-    ) {
-      playerState.shuffleQueue.unshift(previousIndex);
-    }
 
     highlightActiveRow();
     playCurrentQueueTrack();
@@ -541,7 +565,6 @@ function getCurrentTrack() {
   highlightActiveRow();
   playCurrentQueueTrack();
 }
-
   
 
   // ---------- transport controls ----------
