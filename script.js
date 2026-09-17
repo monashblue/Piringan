@@ -35,22 +35,6 @@
   }
 }
 
-  function getRandomNextIndex() {
-  const queue = playerState.queue;
-
-  if (queue.length <= 1) {
-    return playerState.currentIndex;
-  }
-
-  let nextIndex;
-
-  do {
-    nextIndex = Math.floor(Math.random() * queue.length);
-  } while (nextIndex === playerState.currentIndex);
-
-  return nextIndex;
-}
-
   const PLAYLIST_STORAGE_KEY = "piringan_playlists";
 
   function getPlaylists() {
@@ -77,10 +61,14 @@
   let ytReady = false;
   let progressTimer = null;
   
-  const playerState = {
+ const playerState = {
   queue: [],
   currentIndex: -1,
+
   shuffle: false,
+  shuffleQueue: [],
+  shuffleHistory: [],
+
   repeat: "off",
   context: "none",
   playlistId: null
@@ -124,10 +112,48 @@
   playerState.currentIndex = startIndex;
   playerState.context = context;
   playerState.playlistId = null;
+
+  playerState.shuffleQueue = [];
+  playerState.shuffleHistory = [startIndex];
+
+  if (playerState.shuffle) {
+    buildShuffleQueue();
+  }
 }
 
 function getCurrentTrack() {
   return playerState.queue[playerState.currentIndex] || null;
+}
+
+  function buildShuffleQueue() {
+  const queue = playerState.queue;
+
+  if (!queue.length) {
+    playerState.shuffleQueue = [];
+    return;
+  }
+
+  const indexes = queue.map((_, index) => index);
+
+  // Jangan langsung memainkan lagu yang sedang berjalan
+  const remaining = indexes.filter(
+    (index) => index !== playerState.currentIndex
+  );
+
+  // Fisher-Yates shuffle
+  for (let i = remaining.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [remaining[i], remaining[j]] = [
+      remaining[j],
+      remaining[i]
+    ];
+  }
+
+  playerState.shuffleQueue = remaining;
+}
+
+  function startNewShuffleCycle() {
+  buildShuffleQueue();
 }
 
   function renderResults(tracks) {
@@ -333,52 +359,90 @@ function getCurrentTrack() {
 
   if (!queue.length) return;
 
+  // =========================
   // REPEAT ONE
+  // =========================
   if (playerState.repeat === "one") {
     playCurrentQueueTrack();
     return;
   }
 
+  // =========================
   // SHUFFLE
+  // =========================
   if (playerState.shuffle) {
-    const nextIndex = getRandomNextIndex();
 
-    // Kalau hanya ada satu lagu
-    if (nextIndex === playerState.currentIndex) {
-      if (playerState.repeat === "all") {
-        playCurrentQueueTrack();
-      } else {
-        stopPlaybackAtEnd();
-      }
-      return;
-    }
+    // Kalau masih ada lagu yang belum dimainkan
+    if (playerState.shuffleQueue.length > 0) {
+      const nextIndex = playerState.shuffleQueue.shift();
 
-    playerState.currentIndex = nextIndex;
+      playerState.currentIndex = nextIndex;
 
-    highlightActiveRow();
-    playCurrentQueueTrack();
-    return;
-  }
-
-  // PLAY NORMAL / REPEAT ALL
-  if (playerState.currentIndex >= queue.length - 1) {
-
-    // Repeat ALL → kembali ke lagu pertama
-    if (playerState.repeat === "all") {
-      playerState.currentIndex = 0;
+      playerState.shuffleHistory.push(nextIndex);
 
       highlightActiveRow();
       playCurrentQueueTrack();
+
       return;
     }
 
-    // Repeat OFF → berhenti
+    // =========================
+    // SHUFFLE + REPEAT ALL
+    // =========================
+    if (playerState.repeat === "all") {
+
+      startNewShuffleCycle();
+
+      if (playerState.shuffleQueue.length > 0) {
+        const nextIndex = playerState.shuffleQueue.shift();
+
+        playerState.currentIndex = nextIndex;
+
+        playerState.shuffleHistory.push(nextIndex);
+
+        highlightActiveRow();
+        playCurrentQueueTrack();
+
+        return;
+      }
+    }
+
+    // =========================
+    // SHUFFLE + REPEAT OFF
+    // =========================
+    stopPlaybackAtEnd();
+    return;
+  }
+
+  // =========================
+  // NORMAL PLAYBACK
+  // =========================
+
+  if (playerState.currentIndex >= queue.length - 1) {
+
+    // Repeat ALL
+    if (playerState.repeat === "all") {
+      playerState.currentIndex = 0;
+
+      playerState.shuffleHistory = [0];
+
+      highlightActiveRow();
+      playCurrentQueueTrack();
+
+      return;
+    }
+
+    // Repeat OFF
     stopPlaybackAtEnd();
     return;
   }
 
   // Lagu berikutnya
   playerState.currentIndex++;
+
+  playerState.shuffleHistory.push(
+    playerState.currentIndex
+  );
 
   highlightActiveRow();
   playCurrentQueueTrack();
@@ -431,6 +495,43 @@ function getCurrentTrack() {
 
   if (!queue.length) return;
 
+  // =========================
+  // SHUFFLE PREVIOUS
+  // =========================
+  if (playerState.shuffle) {
+
+    // Minimal harus ada lagu sebelum lagu sekarang
+    if (playerState.shuffleHistory.length <= 1) {
+      return;
+    }
+
+    // Buang lagu sekarang dari history
+    playerState.shuffleHistory.pop();
+
+    const previousIndex =
+      playerState.shuffleHistory[
+        playerState.shuffleHistory.length - 1
+      ];
+
+    playerState.currentIndex = previousIndex;
+
+    // Lagu yang sebelumnya diputar
+    // dimasukkan kembali ke shuffle queue
+    if (
+      !playerState.shuffleQueue.includes(previousIndex)
+    ) {
+      playerState.shuffleQueue.unshift(previousIndex);
+    }
+
+    highlightActiveRow();
+    playCurrentQueueTrack();
+
+    return;
+  }
+
+  // =========================
+  // NORMAL PREVIOUS
+  // =========================
   if (playerState.currentIndex <= 0) {
     return;
   }
@@ -441,17 +542,36 @@ function getCurrentTrack() {
   playCurrentQueueTrack();
 }
 
+  
+
   // ---------- transport controls ----------
   btnShuffle.addEventListener("click", () => {
   playerState.shuffle = !playerState.shuffle;
 
-  updateShuffleButton();
+  if (playerState.shuffle) {
+    // Mulai siklus shuffle baru
+    buildShuffleQueue();
 
-  console.log(
-    playerState.shuffle
-      ? "Shuffle ON"
-      : "Shuffle OFF"
-  );
+    // Pastikan history punya lagu yang sedang dimainkan
+    if (
+      playerState.currentIndex >= 0 &&
+      playerState.shuffleHistory.length === 0
+    ) {
+      playerState.shuffleHistory = [
+        playerState.currentIndex
+      ];
+    }
+
+    console.log("Shuffle ON");
+  } else {
+    // Saat shuffle dimatikan,
+    // antrean shuffle tidak lagi digunakan
+    playerState.shuffleQueue = [];
+
+    console.log("Shuffle OFF");
+  }
+
+  updateShuffleButton();
 });
 
   btnRepeat.addEventListener("click", () => {
