@@ -383,10 +383,6 @@ a { color: var(--amber); }
   gap: 8px;
 }
 
-#btn-shuffle.active {
-  color: #1db954;
-  background: rgba(29, 185, 84, 0.15);
-  border-color: #1db954;
 }
 
 .deck-btn {
@@ -402,9 +398,33 @@ a { color: var(--amber); }
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.deck-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+.deck-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+#btn-shuffle.active,
+#btn-repeat.active {
+  color: var(--wood-dark);
+  background: linear-gradient(
+    180deg,
+    var(--amber),
+    var(--amber-dim)
+  );
+  border-color: var(--amber);
+  box-shadow:
+    0 0 0 1px var(--amber-dim),
+    0 2px 0 rgba(0,0,0,0.4),
+    0 0 8px rgba(232,150,60,0.18);
+}
 
 .deck-btn--main {
   width: 48px;
