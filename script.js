@@ -2,10 +2,46 @@
   "use strict";
 
   function updateShuffleButton() {
-  shuffleBtn.classList.toggle(
+  btnShuffle.classList.toggle(
     "active",
     playerState.shuffle
   );
+}
+
+  function updateRepeatButton() {
+  btnRepeat.classList.remove("active");
+
+  if (playerState.repeat === "off") {
+    btnRepeat.textContent = "🔁";
+    return;
+  }
+
+  if (playerState.repeat === "all") {
+    btnRepeat.textContent = "🔁";
+    btnRepeat.classList.add("active");
+    return;
+  }
+
+  if (playerState.repeat === "one") {
+    btnRepeat.textContent = "🔂";
+    btnRepeat.classList.add("active");
+  }
+}
+
+  function getRandomNextIndex() {
+  const queue = playerState.queue;
+
+  if (queue.length <= 1) {
+    return playerState.currentIndex;
+  }
+
+  let nextIndex;
+
+  do {
+    nextIndex = Math.floor(Math.random() * queue.length);
+  } while (nextIndex === playerState.currentIndex);
+
+  return nextIndex;
 }
 
   const PLAYLIST_STORAGE_KEY = "piringan_playlists";
@@ -27,9 +63,6 @@
     JSON.stringify(playlists)
   );
 }
-
-  
-
   
   // ---------- state ----------
   let currentResults = [];   // hasil pencarian, BUKAN queue player
@@ -293,26 +326,67 @@ function getCurrentTrack() {
 
   if (!queue.length) return;
 
-  // Jika sudah di lagu terakhir, berhenti
-  if (playerState.currentIndex >= queue.length - 1) {
-    console.log("Sudah di lagu terakhir. Playback berhenti.");
-
-    if (ytPlayer) {
-      ytPlayer.stopVideo();
-    }
-
-    updatePlayIcon(false);
-    vuEl.classList.remove("is-playing");
-    stopProgressLoop();
-
+  // REPEAT ONE
+  if (playerState.repeat === "one") {
+    playCurrentQueueTrack();
     return;
   }
 
-  // Pindah ke lagu berikutnya
+  // SHUFFLE
+  if (playerState.shuffle) {
+    const nextIndex = getRandomNextIndex();
+
+    // Kalau hanya ada satu lagu
+    if (nextIndex === playerState.currentIndex) {
+      if (playerState.repeat === "all") {
+        playCurrentQueueTrack();
+      } else {
+        stopPlaybackAtEnd();
+      }
+      return;
+    }
+
+    playerState.currentIndex = nextIndex;
+
+    highlightActiveRow();
+    playCurrentQueueTrack();
+    return;
+  }
+
+  // PLAY NORMAL / REPEAT ALL
+  if (playerState.currentIndex >= queue.length - 1) {
+
+    // Repeat ALL → kembali ke lagu pertama
+    if (playerState.repeat === "all") {
+      playerState.currentIndex = 0;
+
+      highlightActiveRow();
+      playCurrentQueueTrack();
+      return;
+    }
+
+    // Repeat OFF → berhenti
+    stopPlaybackAtEnd();
+    return;
+  }
+
+  // Lagu berikutnya
   playerState.currentIndex++;
 
   highlightActiveRow();
   playCurrentQueueTrack();
+}
+
+  function stopPlaybackAtEnd() {
+  console.log("Queue selesai.");
+
+  if (ytPlayer) {
+    ytPlayer.stopVideo();
+  }
+
+  updatePlayIcon(false);
+  vuEl.classList.remove("is-playing");
+  stopProgressLoop();
 }
 
   function playCurrentQueueTrack() {
@@ -361,6 +435,32 @@ function getCurrentTrack() {
 }
 
   // ---------- transport controls ----------
+  btnShuffle.addEventListener("click", () => {
+  playerState.shuffle = !playerState.shuffle;
+
+  updateShuffleButton();
+
+  console.log(
+    playerState.shuffle
+      ? "Shuffle ON"
+      : "Shuffle OFF"
+  );
+});
+
+  btnRepeat.addEventListener("click", () => {
+  if (playerState.repeat === "off") {
+    playerState.repeat = "all";
+  } else if (playerState.repeat === "all") {
+    playerState.repeat = "one";
+  } else {
+    playerState.repeat = "off";
+  }
+
+  updateRepeatButton();
+
+  console.log("Repeat:", playerState.repeat);
+});
+  
   btnPlay.addEventListener("click", () => {
     if (!ytPlayer) return;
     const state = ytPlayer.getPlayerState();
