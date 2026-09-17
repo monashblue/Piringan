@@ -572,23 +572,21 @@ function getCurrentTrack() {
   playerState.shuffle = !playerState.shuffle;
 
   if (playerState.shuffle) {
-    // Mulai siklus shuffle baru
-    buildShuffleQueue();
 
-    // Pastikan history punya lagu yang sedang dimainkan
-    if (
-      playerState.currentIndex >= 0 &&
-      playerState.shuffleHistory.length === 0
-    ) {
+    if (playerState.currentIndex >= 0) {
       playerState.shuffleHistory = [
         playerState.currentIndex
       ];
+
+      playerState.shuffleHistoryIndex = 0;
+
+      buildShuffleQueue();
     }
 
     console.log("Shuffle ON");
+
   } else {
-    // Saat shuffle dimatikan,
-    // antrean shuffle tidak lagi digunakan
+
     playerState.shuffleQueue = [];
 
     console.log("Shuffle OFF");
