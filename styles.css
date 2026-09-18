@@ -591,3 +591,34 @@ a { color: var(--amber); }
   align-items: center;
   justify-content: center;
 }
+
+.playlist-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.playlist-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.playlist-action-btn {
+  border: 1px solid var(--metal);
+  background: linear-gradient(
+    180deg,
+    var(--metal-light),
+    var(--metal)
+  );
+  color: var(--wood-dark);
+  padding: 0.45rem 0.7rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.playlist-action-btn:active {
+  transform: translateY(1px);
+}
