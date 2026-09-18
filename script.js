@@ -95,6 +95,9 @@
   const btnNext = document.getElementById("btn-next");
   const volumeEl = document.getElementById("volume");
   const btnShuffle = document.getElementById("btn-shuffle");
+  const playlistList = document.getElementById("playlist-list");
+  const btnCreatePlaylist =
+  document.getElementById("btn-create-playlist");
 
   // ---------- helpers ----------
   function formatTime(seconds) {
@@ -213,6 +216,75 @@ function getCurrentTrack() {
     );
   });
 }
+
+  function createPlaylistId() {
+  return `playlist-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
+  function renderPlaylists() {
+  const playlists = getPlaylists();
+
+  playlistList.innerHTML = "";
+
+  if (!playlists.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-note";
+    empty.textContent = "Belum ada playlist.";
+    playlistList.appendChild(empty);
+    return;
+  }
+
+  playlists.forEach((playlist) => {
+    const item = document.createElement("div");
+    item.className = "playlist-item";
+
+    const name = document.createElement("div");
+    name.className = "playlist-name";
+    name.textContent = playlist.name;
+
+    const count = document.createElement("div");
+    count.className = "playlist-count";
+    count.textContent = `${playlist.tracks.length} lagu`;
+
+    item.append(name, count);
+    playlistList.appendChild(item);
+  });
+}
+
+  function createPlaylist() {
+  const name = prompt("Nama playlist:");
+
+  if (name === null) return;
+
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    alert("Nama playlist tidak boleh kosong.");
+    return;
+  }
+
+  const playlists = getPlaylists();
+
+  const newPlaylist = {
+    id: createPlaylistId(),
+    name: trimmedName,
+    tracks: []
+  };
+
+  playlists.push(newPlaylist);
+
+  savePlaylists(playlists);
+  renderPlaylists();
+}
+
+  // ---------- playlist controls ----------
+
+btnCreatePlaylist.addEventListener(
+  "click",
+  createPlaylist
+);
 
   // ---------- search ----------
   async function fetchTracks(source, query) {
@@ -659,4 +731,5 @@ function getCurrentTrack() {
       });
     });
   }
+  renderPlaylists();
 })();
