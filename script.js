@@ -354,15 +354,98 @@ resultsEl.appendChild(row);
   resultsEl.innerHTML = "";
 
   const header = document.createElement("div");
-  header.className = "playlist-detail-header";
+    header.className = "playlist-detail-header";
+    
+    const headerInfo = document.createElement("div");
+    
+    const title = document.createElement("h2");
+    title.textContent = playlist.name;
+    
+    const subtitle = document.createElement("p");
+    subtitle.textContent = `${playlist.tracks.length} lagu`;
+    
+    headerInfo.append(title, subtitle);
+    
+    const actions = document.createElement("div");
+    actions.className = "playlist-actions";
+    
+    const renameBtn = document.createElement("button");
+    renameBtn.type = "button";
+    renameBtn.className = "playlist-action-btn";
+    renameBtn.textContent = "Rename";
+    
+    renameBtn.addEventListener("click", () => {
+      renamePlaylist(playlist.id);
+    });
 
-  const title = document.createElement("h2");
-  title.textContent = playlist.name;
+const deleteBtn = document.createElement("button");
+deleteBtn.type = "button";
+deleteBtn.className = "playlist-action-btn";
+deleteBtn.textContent = "Hapus";
 
-  const subtitle = document.createElement("p");
-  subtitle.textContent = `${playlist.tracks.length} lagu`;
+deleteBtn.addEventListener("click", () => {
+  deletePlaylist(playlist.id);
+});
 
-  header.append(title, subtitle);
+actions.append(renameBtn, deleteBtn);
+
+header.append(headerInfo, actions);
+    
+    function renamePlaylist(playlistId) {
+      const playlists = getPlaylists();
+      
+      const playlist = playlists.find(
+    (item) => item.id === playlistId
+  );
+      
+      if (!playlist) return;
+      
+      const newName = prompt(
+        "Nama playlist baru:",
+        playlist.name
+      );
+      
+      if (newName === null) return;
+      
+      const trimmedName = newName.trim();
+      
+      if (!trimmedName) {
+        alert("Nama playlist tidak boleh kosong.");
+        return;
+      }
+      
+      playlist.name = trimmedName;
+      
+      savePlaylists(playlists);
+      
+      renderPlaylists();
+      renderPlaylistDetail(playlist);
+    }
+
+    function deletePlaylist(playlistId) {
+      const playlists = getPlaylists();
+      const playlist = playlists.find(
+    (item) => item.id === playlistId
+  );
+      
+      if (!playlist) return;
+      
+      const confirmed = confirm(
+        `Hapus playlist "${playlist.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  const updatedPlaylists = playlists.filter(
+    (item) => item.id !== playlistId
+  );
+
+  savePlaylists(updatedPlaylists);
+
+  renderPlaylists();
+
+  resultsEl.innerHTML = "";
+}
 
   resultsEl.appendChild(header);
 
