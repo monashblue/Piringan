@@ -315,6 +315,9 @@ resultsEl.appendChild(row);
     const item = document.createElement("div");
     item.className = "playlist-item";
 
+    const info = document.createElement("div");
+    info.className = "playlist-info";
+
     const name = document.createElement("div");
     name.className = "playlist-name";
     name.textContent = playlist.name;
@@ -323,9 +326,139 @@ resultsEl.appendChild(row);
     count.className = "playlist-count";
     count.textContent = `${playlist.tracks.length} lagu`;
 
-    item.append(name, count);
+    info.append(name, count);
+
+    item.appendChild(info);
+
+    item.addEventListener("click", () => {
+      openPlaylist(playlist.id);
+    });
+
     playlistList.appendChild(item);
   });
+}
+
+  function openPlaylist(playlistId) {
+  const playlists = getPlaylists();
+
+  const playlist = playlists.find(
+    (item) => item.id === playlistId
+  );
+
+  if (!playlist) return;
+
+  renderPlaylistDetail(playlist);
+}
+
+  function renderPlaylistDetail(playlist) {
+  resultsEl.innerHTML = "";
+
+  const header = document.createElement("div");
+  header.className = "playlist-detail-header";
+
+  const title = document.createElement("h2");
+  title.textContent = playlist.name;
+
+  const subtitle = document.createElement("p");
+  subtitle.textContent = `${playlist.tracks.length} lagu`;
+
+  header.append(title, subtitle);
+
+  resultsEl.appendChild(header);
+
+  if (!playlist.tracks.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-note";
+    empty.textContent = "Playlist ini masih kosong.";
+    resultsEl.appendChild(empty);
+    return;
+  }
+
+  playlist.tracks.forEach((track, index) => {
+    const row = document.createElement("div");
+    row.className = "track-row";
+
+    const art = document.createElement("img");
+    art.className = "track-art";
+    art.loading = "lazy";
+    art.alt = "";
+    art.src = track.albumArt || "";
+
+    const info = document.createElement("div");
+    info.className = "track-info";
+
+    const name = document.createElement("div");
+    name.className = "track-name";
+    name.textContent = track.name;
+
+    const meta = document.createElement("div");
+    meta.className = "track-meta";
+    meta.textContent = `${track.artists} · ${track.album}`;
+
+    info.append(name, meta);
+
+    const duration = document.createElement("div");
+    duration.className = "track-duration";
+    duration.textContent = formatTime(
+      track.durationMs / 1000
+    );
+
+    const playBtn = document.createElement("button");
+    playBtn.className = "track-play";
+    playBtn.type = "button";
+    playBtn.textContent = "Putar";
+
+    playBtn.addEventListener("click", () => {
+      playPlaylistTrack(playlist.id, index);
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "track-remove";
+    removeBtn.type = "button";
+    removeBtn.textContent = "−";
+    removeBtn.title = "Hapus dari playlist";
+    removeBtn.setAttribute(
+      "aria-label",
+      `Hapus ${track.name} dari playlist`
+    );
+
+    removeBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      removeTrackFromPlaylist(
+        playlist.id,
+        track.id
+      );
+    });
+
+    row.append(
+      art,
+      info,
+      duration,
+      playBtn,
+      removeBtn
+    );
+
+    resultsEl.appendChild(row);
+  });
+}
+
+  function removeTrackFromPlaylist(playlistId, trackId) {
+  const playlists = getPlaylists();
+
+  const playlist = playlists.find(
+    (item) => item.id === playlistId
+  );
+
+  if (!playlist) return;
+
+  playlist.tracks = playlist.tracks.filter(
+    (track) => track.id !== trackId
+  );
+
+  savePlaylists(playlists);
+
+  renderPlaylists();
+  renderPlaylistDetail(playlist);
 }
 
   function createPlaylist() {
