@@ -145,6 +145,75 @@ a { color: var(--amber); }
   color: var(--cream-dim);
 }
 
+/* ---------- playlist deck ---------- */
+.playlist-deck {
+  max-width: 760px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+
+.playlist-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.playlist-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--cream);
+}
+
+.playlist-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--cream-dim);
+}
+
+.playlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.playlist-item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--wood);
+  border: 1px solid var(--wood-light);
+  border-radius: 3px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.playlist-item:hover {
+  background: var(--wood-light);
+  border-color: var(--amber-dim);
+}
+
+.playlist-info { min-width: 0; }
+
+.playlist-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlist-count {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--cream-dim);
+}
+
 /* ---------- results ---------- */
 .results {
   max-width: 760px;
@@ -220,11 +289,93 @@ a { color: var(--amber); }
 .track-play:hover { background: rgba(232,150,60,0.12); }
 .track-row.is-active .track-play { background: var(--amber); color: var(--wood-dark); }
 
+.track-add {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--amber);
+  background: linear-gradient(180deg, var(--amber), var(--amber-dim));
+  color: var(--wood-dark);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.track-add:hover,
+.track-add:active {
+  background: linear-gradient(180deg, var(--metal-light), var(--metal));
+  border-color: var(--metal);
+}
+
+.track-add:active { transform: translateY(1px); }
+
+.track-remove {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--metal);
+  background: linear-gradient(180deg, var(--metal-light), var(--metal));
+  color: var(--wood-dark);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .empty-note {
   color: var(--cream-dim);
   font-size: 0.9rem;
   padding: 20px 4px;
 }
+
+/* ---------- playlist detail view ---------- */
+.playlist-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.playlist-detail-header h2 { margin: 0; }
+
+.playlist-detail-header p {
+  margin: 0.25rem 0 0;
+  color: var(--cream-dim);
+}
+
+.playlist-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.playlist-action-btn {
+  border: 1px solid var(--amber);
+  background: linear-gradient(180deg, var(--amber), var(--amber-dim));
+  color: var(--wood-dark);
+  padding: 0.45rem 0.7rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.playlist-action-btn:hover,
+.playlist-action-btn:active {
+  background: linear-gradient(180deg, var(--metal-light), var(--metal));
+  border-color: var(--metal);
+  color: var(--wood-dark);
+}
+
+.playlist-action-btn:active { transform: translateY(1px); }
 
 /* ---------- console (player bar) ---------- */
 .console {
@@ -376,18 +527,17 @@ a { color: var(--amber); }
   .vu.is-playing span { animation: none; height: 60%; }
 }
 
-/* transport */
+/* ---------- transport ---------- */
 .transport-unit {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-}
-
 .deck-btn {
   width: 40px;
   height: 40px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid var(--metal);
   background: linear-gradient(180deg, var(--metal-light), var(--metal));
@@ -411,6 +561,29 @@ a { color: var(--amber); }
   box-shadow: 0 1px 0 rgba(0,0,0,0.4);
 }
 
+.deck-btn--main {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(180deg, var(--amber), var(--amber-dim));
+  color: var(--wood-dark);
+  font-size: 1.1rem;
+}
+
+/* "+" tombol buat playlist baru: kebalikan dari tombol transport netral
+   -> default oranye (aksi/ajakan), pas ditekan/di-hover jadi silver */
+#btn-create-playlist {
+  background: linear-gradient(180deg, var(--amber), var(--amber-dim));
+  border-color: var(--amber);
+  color: var(--wood-dark);
+}
+
+#btn-create-playlist:hover,
+#btn-create-playlist:active {
+  background: linear-gradient(180deg, var(--metal-light), var(--metal));
+  border-color: var(--metal);
+}
+
+/* ---------- transport active states ---------- */
 #btn-shuffle.active,
 #btn-repeat.active {
   color: var(--wood-dark);
@@ -424,14 +597,6 @@ a { color: var(--amber); }
     0 0 0 1px var(--amber-dim),
     0 2px 0 rgba(0,0,0,0.4),
     0 0 8px rgba(232,150,60,0.18);
-}
-
-.deck-btn--main {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(180deg, var(--amber), var(--amber-dim));
-  color: var(--wood-dark);
-  font-size: 1.1rem;
 }
 
 .volume-unit {
@@ -450,23 +615,6 @@ a { color: var(--amber); }
 #volume {
   width: 70px;
   accent-color: var(--amber);
-}
-
-/* ---------- transport active states ---------- */
-
-#btn-shuffle.active,
-#btn-repeat.active {
-  color: var(--wood-dark);
-  background: linear-gradient(
-    180deg,
-    var(--amber),
-    var(--amber-dim)
-  );
-  border-color: var(--amber);
-  box-shadow:
-    0 0 0 1px var(--amber-dim),
-    0 2px 0 rgba(0,0,0,0.4),
-    0 0 8px rgba(232,150,60,0.18);
 }
 
 /* ---------- responsive ---------- */
@@ -491,134 +639,4 @@ a { color: var(--amber); }
 :focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 2px;
-}
-
-.transport-unit .deck-btn {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--metal);
-  background: linear-gradient(
-    180deg,
-    var(--metal-light),
-    var(--metal)
-  );
-  color: var(--wood-dark);
-  font-size: 1rem;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.transport-unit .deck-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
-}
-
-.transport-unit .deck-btn--main {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(
-    180deg,
-    var(--amber),
-    var(--amber-dim)
-  );
-  color: var(--wood-dark);
-  font-size: 1.1rem;
-}
-
-#btn-shuffle.active,
-#btn-repeat.active {
-  color: var(--wood-dark);
-  background: linear-gradient(
-    180deg,
-    var(--amber),
-    var(--amber-dim)
-  );
-  border-color: var(--amber);
-  box-shadow:
-    0 0 0 1px var(--amber-dim),
-    0 2px 0 rgba(0, 0, 0, 0.4),
-    0 0 8px rgba(232, 150, 60, 0.18);
-}
-
-.playlist-item {
-  cursor: pointer;
-}
-
-.playlist-info {
-  min-width: 0;
-}
-
-.playlist-detail-header {
-  margin-bottom: 1rem;
-}
-
-.playlist-detail-header h2 {
-  margin: 0;
-}
-
-.playlist-detail-header p {
-  margin: 0.25rem 0 0;
-  color: var(--cream-dim);
-}
-
-.track-remove {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--metal);
-  background: linear-gradient(
-    180deg,
-    var(--metal-light),
-    var(--metal)
-  );
-  color: var(--wood-dark);
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.playlist-detail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.playlist-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.playlist-action-btn {
-  border: 1px solid var(--metal);
-  background: linear-gradient(
-    180deg,
-    var(--metal-light),
-    var(--metal)
-  );
-  color: var(--wood-dark);
-  padding: 0.45rem 0.7rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.playlist-action-btn:active {
-  transform: translateY(1px);
 }

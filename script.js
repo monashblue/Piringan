@@ -111,6 +111,70 @@
     statusEl.textContent = text;
   }
 
+  // ---------- pencarian video YouTube yang lebih akurat ----------
+  // Dipakai bareng oleh playTrackAt() dan playCurrentQueueTrack() supaya
+  // logikanya konsisten di satu tempat (lihat catatan di README soal
+  // menambah penyaringan tambahan di sini).
+  const NOISE_WORDS = [
+    "reaction",
+    "cover",
+    "karaoke",
+    "8d audio",
+    "sped up",
+    "nightcore",
+    "slowed",
+    "tutorial",
+    "lirik",
+    "lyrics only",
+  ];
+
+  function cleanTrackTitle(name) {
+    // Buang embel-embel dalam kurung yang sering bikin hasil pencarian
+    // meleset (mis. "(Remastered 2011)", "(2009 Remaster)", "(Radio Edit)")
+    // tapi biarkan embel-embel penting seperti "(feat. ...)" atau
+    // "(Live)" tetap ada karena itu bagian dari identitas lagunya.
+    return name
+      .replace(/\s*[([][^)\]]*\b(remaster(ed)?|radio edit|mono|stereo)\b[^)\]]*[)\]]/gi, "")
+      .trim();
+  }
+
+  function buildYoutubeQuery(track) {
+    const title = cleanTrackTitle(track.name);
+    return `${track.artists} - ${title} official audio`;
+  }
+
+  // Kalau suatu saat /api/youtube-search dikembangkan untuk mengirim
+  // beberapa kandidat (data.items, bukan cuma satu videoId), fungsi ini
+  // bisa dipakai buat milih yang paling cocok dan menghindari video
+  // reaction/cover/karaoke dsb.
+  function pickBestVideoMatch(items, track) {
+    if (!Array.isArray(items) || !items.length) return null;
+
+    const wantedName = track.name.toLowerCase();
+    const wantedArtist = (track.artists || "").split(",")[0].trim().toLowerCase();
+
+    function score(item) {
+      const t = (item.title || "").toLowerCase();
+      const channel = (item.channelTitle || "").toLowerCase();
+      let s = 0;
+
+      if (t.includes(wantedName)) s += 3;
+      if (wantedArtist && (t.includes(wantedArtist) || channel.includes(wantedArtist))) s += 2;
+      if (t.includes("official audio") || t.includes("official video")) s += 2;
+      if (channel.includes("- topic")) s += 2; // channel resmi otomatis YouTube Music
+
+      NOISE_WORDS.forEach((word) => {
+        if (t.includes(word) && !wantedName.includes(word)) s -= 3;
+      });
+
+      return s;
+    }
+
+    return items.reduce((best, item) =>
+      score(item) > score(best) ? item : best
+    , items[0]);
+  }
+
   function setQueue(tracks, startIndex = 0, context = "search") {
   playerState.queue = [...tracks];
   playerState.currentIndex = startIndex;
@@ -643,12 +707,13 @@ btnCreatePlaylist.addEventListener(
     setStatus(`memuat "${track.name}"…`);
 
     try {
-      const query = `${track.artists} ${track.name} audio`;
+      const query = buildYoutubeQuery(track);
       const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Video tidak ditemukan.");
-      loadIntoPlayer(data.videoId);
-      setStatus(`memutar dari YouTube · ${data.channelTitle}`);
+      const best = pickBestVideoMatch(data.items, track) || data;
+      loadIntoPlayer(best.videoId);
+      setStatus(`memutar dari YouTube · ${best.channelTitle}`);
     } catch (err) {
       setStatus(err.message || "Gagal memuat audio dari YouTube.");
     }
@@ -871,7 +936,7 @@ btnCreatePlaylist.addEventListener(
 
   setStatus(`memuat "${track.name}"…`);
 
-  const query = `${track.artists} ${track.name} audio`;
+  const query = buildYoutubeQuery(track);
 
   fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
     .then(async (res) => {
@@ -881,8 +946,9 @@ btnCreatePlaylist.addEventListener(
         throw new Error(data.error || "Video tidak ditemukan.");
       }
 
-      loadIntoPlayer(data.videoId);
-      setStatus(`memutar dari YouTube · ${data.channelTitle}`);
+      const best = pickBestVideoMatch(data.items, track) || data;
+      loadIntoPlayer(best.videoId);
+      setStatus(`memutar dari YouTube · ${best.channelTitle}`);
     })
     .catch((err) => {
       setStatus(err.message || "Gagal memuat audio dari YouTube.");
