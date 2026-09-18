@@ -203,11 +203,86 @@ function getCurrentTrack() {
       playBtn.textContent = "Putar";
       playBtn.addEventListener("click", () => playTrackAt(idx));
 
-      row.append(art, info, duration, playBtn);
-      resultsEl.appendChild(row);
+      const addBtn = document.createElement("button");
+      addBtn.className = "track-add";
+      addBtn.type = "button";
+      addBtn.textContent = "+";
+      addBtn.title = "Tambahkan ke playlist";
+      addBtn.setAttribute("aria-label", `Tambahkan ${track.name} ke playlist`);
+      
+      addBtn.addEventListener("click", () => {
+        openAddToPlaylistMenu(track);
+      });
+      
+      row.append(
+        art,
+        info,
+        duration,
+        playBtn,
+        addBtn
+      );
+
+resultsEl.appendChild(row);
     });
   }
 
+  function openAddToPlaylistMenu(track) {
+  const playlists = getPlaylists();
+
+  if (!playlists.length) {
+    alert("Buat playlist terlebih dahulu.");
+    return;
+  }
+
+  const names = playlists
+    .map((playlist, index) => `${index + 1}. ${playlist.name}`)
+    .join("\n");
+
+  const choice = prompt(
+    `Tambahkan "${track.name}" ke playlist:\n\n${names}\n\nMasukkan nomor playlist:`
+  );
+
+  if (choice === null) return;
+
+  const index = Number(choice) - 1;
+
+  if (!Number.isInteger(index) || !playlists[index]) {
+    alert("Pilihan playlist tidak valid.");
+    return;
+  }
+
+  addTrackToPlaylist(
+    playlists[index].id,
+    track
+  );
+}
+
+  function addTrackToPlaylist(playlistId, track) {
+  const playlists = getPlaylists();
+
+  const playlist = playlists.find(
+    (item) => item.id === playlistId
+  );
+
+  if (!playlist) return;
+
+  const alreadyExists = playlist.tracks.some(
+    (item) => item.id === track.id
+  );
+
+  if (alreadyExists) {
+    alert("Lagu sudah ada di playlist.");
+    return;
+  }
+
+  playlist.tracks.push(track);
+
+  savePlaylists(playlists);
+  renderPlaylists();
+}
+
+  
+  
   function highlightActiveRow() {
   document.querySelectorAll(".track-row").forEach((row) => {
     row.classList.toggle(
