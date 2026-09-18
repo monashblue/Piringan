@@ -552,3 +552,42 @@ a { color: var(--amber); }
     0 2px 0 rgba(0, 0, 0, 0.4),
     0 0 8px rgba(232, 150, 60, 0.18);
 }
+
+.playlist-item {
+  cursor: pointer;
+}
+
+.playlist-info {
+  min-width: 0;
+}
+
+.playlist-detail-header {
+  margin-bottom: 1rem;
+}
+
+.playlist-detail-header h2 {
+  margin: 0;
+}
+
+.playlist-detail-header p {
+  margin: 0.25rem 0 0;
+  color: var(--cream-dim);
+}
+
+.track-remove {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--metal);
+  background: linear-gradient(
+    180deg,
+    var(--metal-light),
+    var(--metal)
+  );
+  color: var(--wood-dark);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
