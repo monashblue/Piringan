@@ -880,11 +880,32 @@ btnCreatePlaylist.addEventListener(
 
   // ---------- search ----------
   async function fetchTracks(source, query) {
-    const res = await fetch(`/api/${source}?q=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Pencarian ${source} gagal.`);
-    return data.tracks || [];
+  const res = await fetch(
+    `/api/${source}?q=${encodeURIComponent(query)}`
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(
+      data.error || `Pencarian ${source} gagal.`
+    );
   }
+
+  const provider =
+    source === "deezer-search"
+      ? "deezer"
+      : source === "itunes-search"
+        ? "itunes"
+        : null;
+
+  return (data.tracks || []).map(track =>
+    normalizeTrack({
+      ...track,
+      provider
+    })
+  );
+}
 
   async function doSearch(query) {
     setStatus("mencari…");
