@@ -183,7 +183,31 @@
   // ---------- riwayat, genre, rekomendasi & lagu mirip ----------
   const HISTORY_STORAGE_KEY = "piringan_history";
   const HISTORY_LIMIT = 300;
-  const genreCache = new Map(); // albumId -> nama genre (string) atau null
+  const GENRE_CACHE_KEY = "piringan_genre_cache";
+
+function getGenreCache() {
+  try {
+    return JSON.parse(
+      localStorage.getItem(GENRE_CACHE_KEY)
+    ) || {};
+  } catch (error) {
+    console.warn("Gagal membaca genre cache:", error);
+    return {};
+  }
+}
+
+function saveGenreCache(cache) {
+  try {
+    localStorage.setItem(
+      GENRE_CACHE_KEY,
+      JSON.stringify(cache)
+    );
+  } catch (error) {
+    console.warn("Gagal menyimpan genre cache:", error);
+  }
+}
+
+const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 
   function getHistory() {
     try {
@@ -203,22 +227,35 @@
   // bukan buat semua baris hasil pencarian sekaligus. Hasilnya di-cache per
   // albumId biar lagu dari album yang sama tidak nge-hit API berkali-kali.
   async function resolveGenre(track) {
-    if (track.genre) return track.genre; // sudah ada langsung, mis. dari iTunes
-    if (!track.albumId) return null;
-    if (genreCache.has(track.albumId)) return genreCache.get(track.albumId);
+  if (track.genre) return track.genre; // sudah ada langsung, mis. dari iTunes
+  if (!track.albumId) return null;
 
-    try {
-      const res = await fetch(`/api/deezer-genre?albumId=${encodeURIComponent(track.albumId)}`);
-      const data = await res.json();
-      const genre = res.ok ? data.genre || null : null;
-      genreCache.set(track.albumId, genre);
-      return genre;
-    } catch (err) {
-      genreCache.set(track.albumId, null);
-      return null;
-    }
+  const cacheKey = track.albumId;
+
+  if (genreCache[cacheKey]) {
+    return genreCache[cacheKey];
   }
 
+  try {
+    const res = await fetch(
+      `/api/deezer-genre?albumId=${encodeURIComponent(track.albumId)}`
+    );
+
+    const data = await res.json();
+    const genre = res.ok ? data.genre || null : null;
+
+    genreCache[cacheKey] = genre;
+    saveGenreCache(genreCache);
+
+    return genre;
+  } catch (err) {
+    genreCache[cacheKey] = null;
+    saveGenreCache(genreCache);
+
+    return null;
+  }
+}
+  
   async function recordHistory(track) {
     if (!track) return;
     const genre = await resolveGenre(track);
