@@ -60,6 +60,7 @@
   let ytPlayer = null;
   let ytReady = false;
   let progressTimer = null;
+  let historyLoggedForCurrentTrack = false;
   
   const playerState = {
   queue: [],
@@ -98,6 +99,10 @@
   const playlistList = document.getElementById("playlist-list");
   const btnCreatePlaylist =
   document.getElementById("btn-create-playlist");
+  const recommendListEl = document.getElementById("recommend-list");
+  const similarDeckEl = document.getElementById("similar-deck");
+  const similarListEl = document.getElementById("similar-list");
+  const similarSubtitleEl = document.getElementById("similar-subtitle");
 
   // ---------- helpers ----------
   function formatTime(seconds) {
@@ -175,6 +180,186 @@
     , items[0]);
   }
 
+  // ---------- riwayat, genre, rekomendasi & lagu mirip ----------
+  const HISTORY_STORAGE_KEY = "piringan_history";
+  const HISTORY_LIMIT = 300;
+  const genreCache = new Map(); // albumId -> nama genre (string) atau null
+
+  function getHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || [];
+    } catch (err) {
+      console.error("Failed to read history:", err);
+      return [];
+    }
+  }
+
+  function saveHistory(history) {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  }
+
+  // Genre lagu dari Deezer tidak ikut di hasil pencarian (lihat catatan di
+  // api/deezer-genre.js), jadi baru diambil pas lagunya benar-benar diputar,
+  // bukan buat semua baris hasil pencarian sekaligus. Hasilnya di-cache per
+  // albumId biar lagu dari album yang sama tidak nge-hit API berkali-kali.
+  async function resolveGenre(track) {
+    if (track.genre) return track.genre; // sudah ada langsung, mis. dari iTunes
+    if (!track.albumId) return null;
+    if (genreCache.has(track.albumId)) return genreCache.get(track.albumId);
+
+    try {
+      const res = await fetch(`/api/deezer-genre?albumId=${encodeURIComponent(track.albumId)}`);
+      const data = await res.json();
+      const genre = res.ok ? data.genre || null : null;
+      genreCache.set(track.albumId, genre);
+      return genre;
+    } catch (err) {
+      genreCache.set(track.albumId, null);
+      return null;
+    }
+  }
+
+  async function recordHistory(track) {
+    if (!track) return;
+    const genre = await resolveGenre(track);
+    track.genre = track.genre || genre; // biar langsung kepakai di tampilan juga
+
+    const history = getHistory();
+    history.push({
+      id: track.id,
+      name: track.name,
+      artists: track.artists,
+      album: track.album,
+      albumArt: track.albumArt,
+      artistId: track.artistId || null,
+      albumId: track.albumId || null,
+      genre: genre,
+      playedAt: new Date().toISOString(),
+    });
+
+    if (history.length > HISTORY_LIMIT) {
+      history.splice(0, history.length - HISTORY_LIMIT);
+    }
+
+    saveHistory(history);
+    loadRecommendations();
+  }
+
+  function getTopArtistIds(limit = 3) {
+    const counts = new Map(); // artistId -> jumlah diputar
+
+    getHistory().forEach((entry) => {
+      if (!entry.artistId) return; // lagu dari iTunes tidak punya artistId Deezer
+      counts.set(entry.artistId, (counts.get(entry.artistId) || 0) + 1);
+    });
+
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([artistId]) => artistId);
+  }
+
+  async function fetchRelated(artistId) {
+    const res = await fetch(`/api/deezer-related?artistId=${encodeURIComponent(artistId)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Gagal mengambil rekomendasi.");
+    return data;
+  }
+
+  function renderTrackList(container, tracks, context) {
+    container.innerHTML = "";
+
+    if (!tracks.length) {
+      const p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "Belum ada yang bisa ditampilkan di sini.";
+      container.appendChild(p);
+      return;
+    }
+
+    tracks.forEach((track, idx) => {
+      const row = buildTrackRow(track, {
+        onPlay: () => {
+          setQueue(tracks, idx, context);
+          playCurrentQueueTrack();
+        },
+        onSecondary: (t) => openAddToPlaylistMenu(t),
+        secondaryLabel: "+",
+        secondaryClass: "track-add",
+        secondaryTitle: "Tambahkan ke playlist",
+        secondaryAriaLabel: `Tambahkan ${track.name} ke playlist`,
+      });
+      container.appendChild(row);
+    });
+  }
+
+  async function loadRecommendations() {
+    const topArtistIds = getTopArtistIds(3);
+
+    if (!topArtistIds.length) {
+      recommendListEl.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "Putar beberapa lagu dari hasil pencarian dulu, nanti rekomendasi muncul di sini.";
+      recommendListEl.appendChild(p);
+      return;
+    }
+
+    try {
+      const historyIds = new Set(getHistory().map((entry) => entry.id));
+      const results = await Promise.all(
+        topArtistIds.map((id) => fetchRelated(id).catch(() => null))
+      );
+
+      const seen = new Set();
+      const combined = [];
+      results.filter(Boolean).forEach((data) => {
+        (data.tracks || []).forEach((t) => {
+          if (historyIds.has(t.id) || seen.has(t.id)) return;
+          seen.add(t.id);
+          combined.push(t);
+        });
+      });
+
+      renderTrackList(recommendListEl, combined.slice(0, 10), "recommend");
+    } catch (err) {
+      recommendListEl.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "Gagal memuat rekomendasi.";
+      recommendListEl.appendChild(p);
+    }
+  }
+
+  async function loadSimilarSongs(track) {
+    if (!track || !track.artistId) {
+      // Lagu dari iTunes (fallback) tidak punya artistId Deezer, jadi tidak
+      // ada cara mencari yang "mirip" — sembunyikan saja panelnya.
+      similarDeckEl.hidden = true;
+      return;
+    }
+
+    similarDeckEl.hidden = false;
+    similarSubtitleEl.textContent = `berdasarkan "${track.name}"`;
+    similarListEl.innerHTML = "";
+    const loading = document.createElement("p");
+    loading.className = "empty-note";
+    loading.textContent = "memuat…";
+    similarListEl.appendChild(loading);
+
+    try {
+      const data = await fetchRelated(track.artistId);
+      const combined = (data.tracks || []).filter((t) => t.id !== track.id).slice(0, 10);
+      renderTrackList(similarListEl, combined, "similar");
+    } catch (err) {
+      similarListEl.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "Gagal memuat lagu mirip.";
+      similarListEl.appendChild(p);
+    }
+  }
+
   function setQueue(tracks, startIndex = 0, context = "search") {
   playerState.queue = [...tracks];
   playerState.currentIndex = startIndex;
@@ -226,6 +411,64 @@ function getCurrentTrack() {
   buildShuffleQueue();
 }
 
+  // Baris lagu yang dipakai bareng oleh hasil pencarian, detail playlist,
+  // rekomendasi, dan lagu mirip — supaya tampilannya konsisten dan tidak
+  // ada 4 salinan kode yang mirip-mirip.
+  function buildTrackRow(track, options = {}) {
+    const { onPlay, secondaryLabel, secondaryClass, secondaryTitle, secondaryAriaLabel, onSecondary } = options;
+
+    const row = document.createElement("div");
+    row.className = "track-row";
+
+    const art = document.createElement("img");
+    art.className = "track-art";
+    art.loading = "lazy";
+    art.alt = "";
+    art.src = track.albumArt || "";
+
+    const info = document.createElement("div");
+    info.className = "track-info";
+    const name = document.createElement("div");
+    name.className = "track-name";
+    name.textContent = track.name;
+    const meta = document.createElement("div");
+    meta.className = "track-meta";
+    // Tampilkan genre kalau sudah kebaca (lihat resolveGenre()), kalau
+    // belum ya nama album seperti biasa.
+    meta.textContent = track.genre
+      ? `${track.artists} · ${track.genre}`
+      : `${track.artists} · ${track.album}`;
+    info.append(name, meta);
+
+    const duration = document.createElement("div");
+    duration.className = "track-duration";
+    duration.textContent = formatTime(track.durationMs / 1000);
+
+    const playBtn = document.createElement("button");
+    playBtn.className = "track-play";
+    playBtn.type = "button";
+    playBtn.textContent = "Putar";
+    if (onPlay) playBtn.addEventListener("click", () => onPlay(track));
+
+    row.append(art, info, duration, playBtn);
+
+    if (onSecondary) {
+      const secondaryBtn = document.createElement("button");
+      secondaryBtn.className = secondaryClass || "track-add";
+      secondaryBtn.type = "button";
+      secondaryBtn.textContent = secondaryLabel || "+";
+      if (secondaryTitle) secondaryBtn.title = secondaryTitle;
+      secondaryBtn.setAttribute("aria-label", secondaryAriaLabel || secondaryTitle || secondaryLabel || "");
+      secondaryBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onSecondary(track);
+      });
+      row.appendChild(secondaryBtn);
+    }
+
+    return row;
+  }
+
   function renderResults(tracks) {
     resultsEl.innerHTML = "";
     if (!tracks.length) {
@@ -237,56 +480,16 @@ function getCurrentTrack() {
     }
 
     tracks.forEach((track, idx) => {
-      const row = document.createElement("div");
-      row.className = "track-row";
-      row.dataset.index = String(idx);
-
-      const art = document.createElement("img");
-      art.className = "track-art";
-      art.loading = "lazy";
-      art.alt = "";
-      art.src = track.albumArt || "";
-
-      const info = document.createElement("div");
-      info.className = "track-info";
-      const name = document.createElement("div");
-      name.className = "track-name";
-      name.textContent = track.name;
-      const meta = document.createElement("div");
-      meta.className = "track-meta";
-      meta.textContent = `${track.artists} · ${track.album}`;
-      info.append(name, meta);
-
-      const duration = document.createElement("div");
-      duration.className = "track-duration";
-      duration.textContent = formatTime(track.durationMs / 1000);
-
-      const playBtn = document.createElement("button");
-      playBtn.className = "track-play";
-      playBtn.type = "button";
-      playBtn.textContent = "Putar";
-      playBtn.addEventListener("click", () => playTrackAt(idx));
-
-      const addBtn = document.createElement("button");
-      addBtn.className = "track-add";
-      addBtn.type = "button";
-      addBtn.textContent = "+";
-      addBtn.title = "Tambahkan ke playlist";
-      addBtn.setAttribute("aria-label", `Tambahkan ${track.name} ke playlist`);
-      
-      addBtn.addEventListener("click", () => {
-        openAddToPlaylistMenu(track);
+      const row = buildTrackRow(track, {
+        onPlay: () => playTrackAt(idx),
+        onSecondary: (t) => openAddToPlaylistMenu(t),
+        secondaryLabel: "+",
+        secondaryClass: "track-add",
+        secondaryTitle: "Tambahkan ke playlist",
+        secondaryAriaLabel: `Tambahkan ${track.name} ke playlist`,
       });
-      
-      row.append(
-        art,
-        info,
-        duration,
-        playBtn,
-        addBtn
-      );
-
-resultsEl.appendChild(row);
+      row.dataset.index = String(idx);
+      resultsEl.appendChild(row);
     });
   }
 
@@ -522,71 +725,28 @@ header.append(headerInfo, actions);
   }
 
   playlist.tracks.forEach((track, index) => {
-    const row = document.createElement("div");
-    row.className = "track-row";
-
-    const art = document.createElement("img");
-    art.className = "track-art";
-    art.loading = "lazy";
-    art.alt = "";
-    art.src = track.albumArt || "";
-
-    const info = document.createElement("div");
-    info.className = "track-info";
-
-    const name = document.createElement("div");
-    name.className = "track-name";
-    name.textContent = track.name;
-
-    const meta = document.createElement("div");
-    meta.className = "track-meta";
-    meta.textContent = `${track.artists} · ${track.album}`;
-
-    info.append(name, meta);
-
-    const duration = document.createElement("div");
-    duration.className = "track-duration";
-    duration.textContent = formatTime(
-      track.durationMs / 1000
-    );
-
-    const playBtn = document.createElement("button");
-    playBtn.className = "track-play";
-    playBtn.type = "button";
-    playBtn.textContent = "Putar";
-
-    playBtn.addEventListener("click", () => {
-      playPlaylistTrack(playlist.id, index);
+    const row = buildTrackRow(track, {
+      onPlay: () => playPlaylistTrack(playlist.id, index),
+      onSecondary: (t) => removeTrackFromPlaylist(playlist.id, t.id),
+      secondaryLabel: "−",
+      secondaryClass: "track-remove",
+      secondaryTitle: "Hapus dari playlist",
+      secondaryAriaLabel: `Hapus ${track.name} dari playlist`,
     });
-
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "track-remove";
-    removeBtn.type = "button";
-    removeBtn.textContent = "−";
-    removeBtn.title = "Hapus dari playlist";
-    removeBtn.setAttribute(
-      "aria-label",
-      `Hapus ${track.name} dari playlist`
-    );
-
-    removeBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      removeTrackFromPlaylist(
-        playlist.id,
-        track.id
-      );
-    });
-
-    row.append(
-      art,
-      info,
-      duration,
-      playBtn,
-      removeBtn
-    );
 
     resultsEl.appendChild(row);
   });
+}
+
+  function playPlaylistTrack(playlistId, index) {
+  const playlists = getPlaylists();
+  const playlist = playlists.find((item) => item.id === playlistId);
+  if (!playlist) return;
+
+  setQueue(playlist.tracks, index, "playlist");
+  playerState.playlistId = playlistId;
+  highlightActiveRow();
+  playCurrentQueueTrack();
 }
 
   function removeTrackFromPlaylist(playlistId, trackId) {
@@ -720,6 +880,7 @@ btnCreatePlaylist.addEventListener(
   }
 
   function loadIntoPlayer(videoId) {
+    historyLoggedForCurrentTrack = false;
     if (!ytReady) {
       // player not ready yet; retry shortly once the IFrame API has loaded
       setTimeout(() => loadIntoPlayer(videoId), 300);
@@ -754,6 +915,12 @@ btnCreatePlaylist.addEventListener(
     vuEl.classList.toggle("is-playing", playing);
     if (playing) {
       startProgressLoop();
+      if (!historyLoggedForCurrentTrack) {
+        historyLoggedForCurrentTrack = true;
+        const track = getCurrentTrack();
+        recordHistory(track);
+        loadSimilarSongs(track);
+      }
     } else {
       stopProgressLoop();
     }
@@ -1089,4 +1256,5 @@ btnCreatePlaylist.addEventListener(
     });
   }
   renderPlaylists();
+  loadRecommendations();
 })();

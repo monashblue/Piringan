@@ -84,3 +84,13 @@ Catatan: pemutaran video YouTube di dalam WebView/TWA berperilaku sama seperti d
 - Kuota gratis YouTube Data API adalah 10.000 unit/hari; setiap pencarian memakai ±100 unit, jadi cukup untuk ±100 pencarian/hari sebelum kena limit.
 - Karena pencarian video dilakukan otomatis berdasarkan judul+artis, sesekali video yang terpilih mungkin bukan versi audio resmi/terbaik — bisa disesuaikan lagi logikanya di `playTrackAt()` pada `script.js` bila mau menambah, misalnya, penyaringan tambahan.
 - Ini proyek untuk pemakaian pribadi/pembelajaran; pastikan pemakaian API Deezer dan YouTube-mu tetap mengikuti ketentuan layanan masing-masing.
+
+## Genre, riwayat, rekomendasi & lagu mirip
+
+Semua fitur ini murni berjalan di sisi kamu (localStorage per-perangkat/per-browser) — tidak ada database, tidak ada akun, tidak ada data yang dikirim ke mana pun selain ke Deezer/YouTube untuk pencarian.
+
+- **Genre**: `api/deezer-genre.js` mengambil genre dari endpoint album Deezer (`/album/{id}`), dipanggil sekali per lagu **saat lagunya benar-benar diputar** (bukan untuk semua hasil pencarian sekaligus), lalu di-cache di memori. Lagu dari fallback iTunes sudah langsung bawa genre dari `primaryGenreName`, tanpa request tambahan.
+- **Riwayat mendengarkan**: disimpan di `localStorage` (`piringan_history`, maksimum 300 entri terakhir) tiap kali sebuah lagu mulai diputar (event `PLAYING` dari YouTube player, sekali per pemuatan video).
+- **Rekomendasi** ("Rekomendasi" di bawah Playlist): diambil dari `api/deezer-related.js` berdasarkan 3 artis yang paling sering muncul di riwayatmu, dikurangi lagu yang sudah pernah kamu putar.
+- **Lagu mirip** ("Mirip dengan ini", muncul otomatis di bawah rekomendasi saat sebuah lagu diputar): dari artis yang sama + artis terkait versi Deezer (`/artist/{id}/related`), lewat endpoint yang sama (`deezer-related.js`).
+- Karena butuh `artistId`/`albumId` dari Deezer, ketiga fitur di atas otomatis nonaktif (disembunyikan/kosong) untuk lagu yang datang dari fallback iTunes — Deezer tidak bisa dicocokkan balik ke katalog iTunes.

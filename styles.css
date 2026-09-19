@@ -179,6 +179,15 @@ a { color: var(--amber); }
   gap: 6px;
 }
 
+/* Rekomendasi & lagu mirip pakai .track-row yang sama seperti hasil
+   pencarian, cuma wadahnya lebih sederhana karena sudah ada di dalam
+   .playlist-deck yang sudah dikasih max-width/padding. */
+.discover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .playlist-item {
   cursor: pointer;
   display: flex;
