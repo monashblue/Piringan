@@ -230,10 +230,24 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 function normalizeTrack(track) {
   if (!track) return null;
 
+  const provider = track.provider || null;
+
+  const providerId =
+    track.providerId ||
+    track.id ||
+    track.trackId ||
+    null;
+
   return {
     ...track,
 
-    id: track.id || track.trackId || null,
+    // Identitas internal Piringan
+    id: provider && providerId
+      ? `${provider}:${providerId}`
+      : providerId,
+
+    provider,
+    providerId,
 
     title:
       track.title ||
@@ -258,9 +272,7 @@ function normalizeTrack(track) {
     genre:
       track.genre ||
       track.primaryGenreName ||
-      null,
-
-    provider: track.provider || null
+      null
   };
 }
   
@@ -270,7 +282,7 @@ function normalizeTrack(track) {
   if (track.genre) return track.genre; // sudah ada langsung, mis. dari iTunes
   if (!track.albumId) return null;
 
-  const cacheKey = track.albumId;
+  const cacheKey = `${track.provider}:${track.albumId}`;
 
   if (genreCache[cacheKey]) {
     return genreCache[cacheKey];
@@ -304,16 +316,21 @@ function normalizeTrack(track) {
     const history = getHistory();
     history.push({
       id: track.id,
+      provider: track.provider || null,
+      providerId: track.providerId || null,
+      
       name: track.name,
       artists: track.artists,
       album: track.album,
       albumArt: track.albumArt,
+      
       artistId: track.artistId || null,
       albumId: track.albumId || null,
+      
       genre: genre,
       playedAt: new Date().toISOString(),
     });
-
+    
     if (history.length > HISTORY_LIMIT) {
       history.splice(0, history.length - HISTORY_LIMIT);
     }
