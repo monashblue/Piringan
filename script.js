@@ -226,7 +226,27 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
   // api/deezer-genre.js), jadi baru diambil pas lagunya benar-benar diputar,
   // bukan buat semua baris hasil pencarian sekaligus. Hasilnya di-cache per
   // albumId biar lagu dari album yang sama tidak nge-hit API berkali-kali.
+
+function normalizeTrack(track) {
+  if (!track) return null;
+
+  return {
+    ...track,
+
+    id: track.id || track.trackId || null,
+    title: track.title || track.trackName || "",
+    artist: track.artist || track.artistName || "",
+    album: track.album || track.collectionName || "",
+    albumId: track.albumId || null,
+    artistId: track.artistId || null,
+    genre: track.genre || track.primaryGenreName || null,
+    provider: track.provider || null
+  };
+}
+  
   async function resolveGenre(track) {
+  track = normalizeTrack(track);
+
   if (track.genre) return track.genre; // sudah ada langsung, mis. dari iTunes
   if (!track.albumId) return null;
 
