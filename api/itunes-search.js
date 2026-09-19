@@ -33,6 +33,11 @@ module.exports = async (req, res) => {
       albumArt: t.artworkUrl100 ? t.artworkUrl100.replace("100x100", "600x600") : null,
       durationMs: t.trackTimeMillis || 0,
       sourceUrl: t.trackViewUrl || null,
+      // iTunes sudah menyertakan genre langsung di hasil pencarian, tidak
+      // perlu request tambahan seperti di jalur Deezer (lihat deezer-genre.js).
+      genre: t.primaryGenreName || null,
+      artistId: null,
+      albumId: null,
     }));
 
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate");

@@ -36,6 +36,8 @@ module.exports = async (req, res) => {
       albumArt: t.album?.cover_medium || t.album?.cover || null,
       durationMs: (t.duration || 0) * 1000,
       sourceUrl: t.link || null,
+      artistId: t.artist?.id ? String(t.artist.id) : null,
+      albumId: t.album?.id ? String(t.album.id) : null,
     }));
 
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate");
