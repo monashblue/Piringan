@@ -234,12 +234,32 @@ function normalizeTrack(track) {
     ...track,
 
     id: track.id || track.trackId || null,
-    title: track.title || track.trackName || "",
-    artist: track.artist || track.artistName || "",
-    album: track.album || track.collectionName || "",
+
+    title:
+      track.title ||
+      track.name ||
+      track.trackName ||
+      "",
+
+    artist:
+      track.artist ||
+      track.artists ||
+      track.artistName ||
+      "",
+
+    album:
+      track.album ||
+      track.collectionName ||
+      "",
+
     albumId: track.albumId || null,
     artistId: track.artistId || null,
-    genre: track.genre || track.primaryGenreName || null,
+
+    genre:
+      track.genre ||
+      track.primaryGenreName ||
+      null,
+
     provider: track.provider || null
   };
 }
