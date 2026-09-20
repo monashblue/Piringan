@@ -61,6 +61,7 @@
   let ytReady = false;
   let progressTimer = null;
   let historyLoggedForCurrentTrack = false;
+  let historyThresholdTimer = null;
   
   const playerState = {
   queue: [],
@@ -1024,25 +1025,66 @@ btnCreatePlaylist.addEventListener(
     }
   }
 
-  function onPlayerStateChange(event) {
-    const playing = event.data === YT.PlayerState.PLAYING;
-    updatePlayIcon(playing);
-    vuEl.classList.toggle("is-playing", playing);
-    if (playing) {
-      startProgressLoop();
-      if (!historyLoggedForCurrentTrack) {
-        historyLoggedForCurrentTrack = true;
-        const track = getCurrentTrack();
-        recordHistory(track);
-        loadSimilarSongs(track);
-      }
-    } else {
-      stopProgressLoop();
-    }
-    if (event.data === YT.PlayerState.ENDED) {
-      playNext();
+  function checkHistoryThreshold() {
+  if (historyLoggedForCurrentTrack) return;
+
+  const track = getCurrentTrack();
+  if (!track || !player) return;
+
+  const currentTime = player.getCurrentTime();
+  const duration = player.getDuration();
+
+  if (!duration || duration <= 0) return;
+
+  const reachedTimeThreshold = currentTime >= 30;
+  const reachedPercentageThreshold =
+    currentTime / duration >= 0.30;
+
+  if (reachedTimeThreshold || reachedPercentageThreshold) {
+    historyLoggedForCurrentTrack = true;
+
+    recordHistory(track);
+    loadSimilarSongs(track);
+
+    if (historyThresholdTimer) {
+      clearInterval(historyThresholdTimer);
+      historyThresholdTimer = null;
     }
   }
+}
+
+  function onPlayerStateChange(event) {
+  const playing = event.data === YT.PlayerState.PLAYING;
+
+  updatePlayIcon(playing);
+  vuEl.classList.toggle("is-playing", playing);
+
+  if (playing) {
+    startProgressLoop();
+
+    if (!historyLoggedForCurrentTrack) {
+      if (historyThresholdTimer) {
+        clearInterval(historyThresholdTimer);
+      }
+
+      historyThresholdTimer = setInterval(
+        checkHistoryThreshold,
+        1000
+      );
+    }
+  } else {
+    stopProgressLoop();
+
+    if (historyThresholdTimer) {
+      clearInterval(historyThresholdTimer);
+      historyThresholdTimer = null;
+    }
+  }
+
+  if (event.data === YT.PlayerState.ENDED) {
+    playNext();
+  }
+}
 
   function updatePlayIcon(playing) {
     btnPlay.textContent = playing ? "⏸" : "▶";
