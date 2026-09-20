@@ -1026,32 +1026,32 @@ btnCreatePlaylist.addEventListener(
   }
 
   function checkHistoryThreshold() {
-  if (historyLoggedForCurrentTrack) return;
-
-  const track = getCurrentTrack();
-  if (!track || !player) return;
-
-  const currentTime = player.getCurrentTime();
-  const duration = player.getDuration();
-
-  if (!duration || duration <= 0) return;
-
-  const reachedTimeThreshold = currentTime >= 30;
-  const reachedPercentageThreshold =
-    currentTime / duration >= 0.30;
-
-  if (reachedTimeThreshold || reachedPercentageThreshold) {
-    historyLoggedForCurrentTrack = true;
-
-    recordHistory(track);
-    loadSimilarSongs(track);
-
-    if (historyThresholdTimer) {
-      clearInterval(historyThresholdTimer);
-      historyThresholdTimer = null;
-    }
-  }
-}
+	  if (historyLoggedForCurrentTrack) return;
+	  
+	  const track = getCurrentTrack();
+	  if (!track || !ytPlayer) return;
+	  
+	  const currentTime = ytPlayer.getCurrentTime();
+	  const duration = ytPlayer.getDuration();
+	  
+	  if (!duration || duration <= 0) return;
+	  
+	  const reachedTimeThreshold = currentTime >= 30;
+	  const reachedPercentageThreshold =
+	  currentTime / duration >= 0.30;
+	  
+	  if (reachedTimeThreshold || reachedPercentageThreshold) {
+		  historyLoggedForCurrentTrack = true;
+		  
+		  recordHistory(track);
+		  loadSimilarSongs(track);
+		  
+		  if (historyThresholdTimer) {
+			  clearInterval(historyThresholdTimer);
+			  historyThresholdTimer = null;
+			  }
+			  }
+			  }
 
   function onPlayerStateChange(event) {
   const playing = event.data === YT.PlayerState.PLAYING;
