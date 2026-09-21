@@ -301,12 +301,19 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
         track.playedAt > stats.genres[genre].lastPlayedAt
       ) {
         stats.genres[genre].lastPlayedAt = track.playedAt;
-      }
-    }
-  }
-
-  return stats;
-}
+	  }
+	}
+		}
+		
+		return stats;
+	}
+	
+	function getGenrePreferences() {
+		const stats = getHistoryStats();
+		
+		return Object.values(stats.genres)
+			.sort((a, b) => b.plays - a.plays);
+	}
 
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
