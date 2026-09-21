@@ -316,21 +316,26 @@ function normalizeTrack(track) {
 
     const history = getHistory();
     history.push({
-      id: track.id,
-      provider: track.provider || null,
-      providerId: track.providerId || null,
-      
-      name: track.name,
-      artists: track.artists,
-      album: track.album,
-      albumArt: track.albumArt,
-      
-      artistId: track.artistId || null,
-      albumId: track.albumId || null,
-      
-      genre: genre,
-      playedAt: new Date().toISOString(),
-    });
+		id: track.id,
+		provider: track.provider || null,
+		providerId: track.providerId || null,
+		
+		name: track.name || track.title || "",
+		title: track.title || track.name || "",
+		
+		artists: track.artists || track.artist || "",
+		artist: track.artist || track.artists || "",
+		
+		album: track.album || "",
+		albumArt: track.albumArt || "",
+		
+		artistId: track.artistId || null,
+		albumId: track.albumId || null,
+		
+		genre: genre || track.genre || null,
+		
+		playedAt: new Date().toISOString(),
+	});
     
     if (history.length > HISTORY_LIMIT) {
       history.splice(0, history.length - HISTORY_LIMIT);
