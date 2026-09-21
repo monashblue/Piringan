@@ -219,6 +219,95 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
     }
   }
 
+	function getHistoryStats() {
+		const history = getHistory();
+		
+		const stats = {
+			totalPlays: history.length,
+			tracks: {},
+			artists: {},
+			genres: {}
+		};
+		
+		for (const track of history) {
+			if (!track) continue;
+			
+			const trackId = [
+				track.provider || "unknown",
+				track.providerId || track.id || ""
+			].join(":");
+			
+			const artist = track.artist || track.artists;
+			const genre = track.genre;
+			
+			// Statistik lagu
+			if (trackId) {
+				if (!stats.tracks[trackId]) {
+					stats.tracks[trackId] = {
+						id: track.id || null,
+						provider: track.provider || null,
+						providerId: track.providerId || null,
+						title: track.title || track.name || "",
+						artist: artist || "",
+						plays: 0,
+						lastPlayedAt: null
+					};
+				}
+
+      stats.tracks[trackId].plays++;
+
+      if (
+        !stats.tracks[trackId].lastPlayedAt ||
+        track.playedAt > stats.tracks[trackId].lastPlayedAt
+      ) {
+        stats.tracks[trackId].lastPlayedAt = track.playedAt;
+      }
+    }
+
+    // Statistik artis
+    if (artist) {
+      if (!stats.artists[artist]) {
+        stats.artists[artist] = {
+          name: artist,
+          plays: 0,
+          lastPlayedAt: null
+        };
+      }
+
+      stats.artists[artist].plays++;
+
+      if (
+        !stats.artists[artist].lastPlayedAt ||
+        track.playedAt > stats.artists[artist].lastPlayedAt
+      ) {
+        stats.artists[artist].lastPlayedAt = track.playedAt;
+      }
+    }
+
+    // Statistik genre
+    if (genre) {
+      if (!stats.genres[genre]) {
+        stats.genres[genre] = {
+          name: genre,
+          plays: 0,
+          lastPlayedAt: null
+        };
+      }
+
+      stats.genres[genre].plays++;
+
+      if (
+        !stats.genres[genre].lastPlayedAt ||
+        track.playedAt > stats.genres[genre].lastPlayedAt
+      ) {
+        stats.genres[genre].lastPlayedAt = track.playedAt;
+      }
+    }
+  }
+
+  return stats;
+}
+
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   }
