@@ -315,8 +315,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			.sort((a, b) => b.plays - a.plays);
 	}
 
-	console.log("C1 genre preferences:", getGenrePreferences());
-
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   }
