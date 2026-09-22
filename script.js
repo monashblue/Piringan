@@ -380,9 +380,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		
 		return 1 / (1 + plays);
 	}
-
-	window.testRepetitionFactor = getRepetitionFactor;
-	window.testHistoryTracks = () => getHistoryStats().tracks;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
