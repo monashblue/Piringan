@@ -322,6 +322,24 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			.sort((a, b) => b.plays - a.plays);
 	}
 
+	function getRecencyWeight(lastPlayedAt, halfLifeDays = 7) {
+		if (!lastPlayedAt) return 0;
+		
+		const lastPlayed = new Date(lastPlayedAt).getTime();
+		const now = Date.now();
+		
+		if (Number.isNaN(lastPlayed)) return 0;
+		
+		const ageInDays = Math.max(
+			0,
+			(now - lastPlayed) / (1000 * 60 * 60 * 24)
+		);
+		
+		return Math.pow(0.5, ageInDays / halfLifeDays);
+	}
+
+	window.testRecencyWeight = getRecencyWeight;
+
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   }
