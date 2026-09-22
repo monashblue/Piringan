@@ -322,6 +322,7 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			.sort((a, b) => b.plays - a.plays);
 	}
 
+	console.log("C2 LOADED");
 	window.testArtistPreferences = getArtistPreferences;
 
   function saveHistory(history) {
