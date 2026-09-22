@@ -653,6 +653,7 @@ function normalizeTrack(track) {
 			.map(normalizeTrack);
 
 		window.testSimilarCandidates = candidates;
+		console.log("NORMALIZED CANDIDATE:", candidates[0]);
 		renderTrackList(similarListEl, combined, "similar");
 		
     } catch (err) {
