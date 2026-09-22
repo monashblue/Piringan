@@ -314,6 +314,15 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		return Object.values(stats.genres)
 			.sort((a, b) => b.plays - a.plays);
 	}
+	
+	function getArtistPreferences() {
+		const stats = getHistoryStats();
+		
+		return Object.values(stats.artists)
+			.sort((a, b) => b.plays - a.plays);
+	}
+
+	window.testArtistPreferences = getArtistPreferences;
 
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
