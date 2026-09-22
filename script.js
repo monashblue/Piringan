@@ -431,6 +431,15 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		return scores.map(score => score / maxScore);
 	}
 
+	function getFinalSimilarityScore(similarityScore, personalizationScore) {
+		return (
+			(similarityScore * 0.6) +
+			(personalizationScore * 0.4)
+		);
+	}
+	
+	window.testFinalSimilarityScore = getFinalSimilarityScore;
+
 	function getSimilarityScore(index, totalCandidates) {
 		if (
 			typeof index !== "number" ||
