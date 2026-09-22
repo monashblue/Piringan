@@ -682,9 +682,11 @@ function normalizeTrack(track) {
 			.map(normalizeTrack);
 
 		window.testSimilarCandidates = candidates;
-		renderTrackList(similarListEl, combined, "similar");
+		console.log("SIMILAR CANDIDATES:", candidates);
+		renderTrackList(similarListEl, candidates, "similar");
+	} 
 		
-    } catch (err) {
+	catch (err) {
       similarListEl.innerHTML = "";
       const p = document.createElement("p");
       p.className = "empty-note";
