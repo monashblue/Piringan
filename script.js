@@ -380,6 +380,42 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		
 		return 1 / (1 + plays);
 	}
+
+	function getCandidateScore(track) {
+		if (!track) return 0;
+		
+		const genrePreferences = getWeightedGenrePreferences();
+		const artistPreferences = getWeightedArtistPreferences();
+		
+		const genre = track.genre;
+		const artist = track.artist || track.artists;
+		
+		const genrePreference = genrePreferences.find(
+			item => item.name === genre
+		);
+		
+		const artistPreference = artistPreferences.find(
+			item => item.name === artist
+		);
+		
+		const genreScore = genrePreference
+			? genrePreference.score
+			: 0;
+		
+		const artistScore = artistPreference
+			? artistPreference.score
+			: 0;
+		
+		const repetitionFactor = getRepetitionFactor(track);
+		
+		const baseScore =
+			genreScore +
+			artistScore;
+		
+		return baseScore * repetitionFactor;
+	}
+
+	window.testCandidateScore = getCandidateScore;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
