@@ -628,8 +628,6 @@ function normalizeTrack(track) {
   }
 
   async function loadSimilarSongs(track) {
-	  console.log("loadSimilarSongs dipanggil", track);
-	  
 	  if (!track || !track.artistId) {
       // Lagu dari iTunes (fallback) tidak punya artistId Deezer, jadi tidak
       // ada cara mencari yang "mirip" — sembunyikan saja panelnya.
@@ -653,7 +651,6 @@ function normalizeTrack(track) {
 			.map(normalizeTrack);
 
 		window.testSimilarCandidates = candidates;
-		console.log("NORMALIZED CANDIDATE:", candidates[0]);
 		renderTrackList(similarListEl, combined, "similar");
 		
     } catch (err) {
