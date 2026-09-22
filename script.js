@@ -649,7 +649,10 @@ function normalizeTrack(track) {
 		const candidates = (data.tracks || [])
 			.filter((t) => t.id !== track.id)
 			.map(normalizeTrack);
-      renderTrackList(similarListEl, combined, "similar");
+
+		window.testSimilarCandidates = candidates;
+		renderTrackList(similarListEl, combined, "similar");
+		
     } catch (err) {
       similarListEl.innerHTML = "";
       const p = document.createElement("p");
