@@ -682,7 +682,6 @@ function normalizeTrack(track) {
 			.map(normalizeTrack);
 
 		window.testSimilarCandidates = candidates;
-		window.testNormalizeCandidateScores = normalizeCandidateScores;
 		renderTrackList(similarListEl, combined, "similar");
 		
     } catch (err) {
