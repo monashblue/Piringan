@@ -414,6 +414,20 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		
 		return baseScore * repetitionFactor;
 	}
+
+	function getSimilarityScore(index, totalCandidates) {
+		if (
+			typeof index !== "number" ||
+			typeof totalCandidates !== "number" ||
+			totalCandidates <= 0
+		) {
+			return 0;
+		}
+		
+		return 1 - (index / totalCandidates);
+	}
+
+	window.testSimilarityScore = getSimilarityScore;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
