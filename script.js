@@ -628,7 +628,9 @@ function normalizeTrack(track) {
   }
 
   async function loadSimilarSongs(track) {
-    if (!track || !track.artistId) {
+	  console.log("loadSimilarSongs dipanggil", track);
+	  
+	  if (!track || !track.artistId) {
       // Lagu dari iTunes (fallback) tidak punya artistId Deezer, jadi tidak
       // ada cara mencari yang "mirip" — sembunyikan saja panelnya.
       similarDeckEl.hidden = true;
