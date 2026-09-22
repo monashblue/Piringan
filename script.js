@@ -644,8 +644,11 @@ function normalizeTrack(track) {
     similarListEl.appendChild(loading);
 
     try {
-      const data = await fetchRelated(track.artistId);
-      const combined = (data.tracks || []).filter((t) => t.id !== track.id).slice(0, 10);
+		const data = await fetchRelated(track.artistId);
+		
+		const candidates = (data.tracks || [])
+			.filter((t) => t.id !== track.id)
+			.map(normalizeTrack);
       renderTrackList(similarListEl, combined, "similar");
     } catch (err) {
       similarListEl.innerHTML = "";
