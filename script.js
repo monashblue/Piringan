@@ -495,12 +495,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		});
 	}
 	
-	window.testFilterSimilarCandidates = filterSimilarCandidates;
-	
-	window.testScoreSimilarCandidates = scoreSimilarCandidates;
-	
-	window.testFinalSimilarityScore = getFinalSimilarityScore;
-
 	function getSimilarityScore(index, totalCandidates) {
 		if (
 			typeof index !== "number" ||
@@ -528,9 +522,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		
 		return scores.map(score => score / maxScore);
 	}
-
-	window.testNormalizeCandidateScores = normalizeCandidateScores;
-	window.testSimilarityScore = getSimilarityScore;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
@@ -774,20 +765,12 @@ function normalizeTrack(track) {
 		const filteredCandidates =
 			filterSimilarCandidates(candidates, track);
 
-		console.log("SIMILAR FILTER:", {
-			before: candidates.length,
-			after: filteredCandidates.length,
-			currentTrack: track,
-			filteredCandidates
-		});
-
 		const scored = scoreSimilarCandidates(filteredCandidates);
 		
 		const combined = scored
 			.sort((a, b) => b.finalScore - a.finalScore)
 			.map(item => item.track);
 
-		window.testSimilarCandidates = candidates;
 		console.log("SIMILAR CANDIDATES:", candidates);
 		renderTrackList(similarListEl, combined, "similar");
 	} 
