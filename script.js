@@ -774,6 +774,13 @@ function normalizeTrack(track) {
 		const filteredCandidates =
 			filterSimilarCandidates(candidates, track);
 
+		console.log("SIMILAR FILTER:", {
+			before: candidates.length,
+			after: filteredCandidates.length,
+			currentTrack: track,
+			filteredCandidates
+		});
+
 		const scored = scoreSimilarCandidates(filteredCandidates);
 		
 		const combined = scored
