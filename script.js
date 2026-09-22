@@ -444,6 +444,7 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 	}
 
 	window.testNormalizeCandidateScores = normalizeCandidateScores;
+	window.testSimilarCandidates = candidates;
 	window.testSimilarityScore = getSimilarityScore;
 	
 	function saveHistory(history) {
