@@ -382,6 +382,7 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 	}
 
 	window.testRepetitionFactor = getRepetitionFactor;
+	window.testHistoryTracks = () => getHistoryStats().tracks;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
