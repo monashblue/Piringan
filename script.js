@@ -414,8 +414,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		
 		return baseScore * repetitionFactor;
 	}
-
-	window.testCandidateScore = getCandidateScore;
 	
 	function saveHistory(history) {
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
