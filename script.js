@@ -438,6 +438,36 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		);
 	}
 	
+	function scoreSimilarCandidates(candidates) {
+		if (!candidates.length) return [];
+		
+		const personalizationScores =
+			normalizeCandidateScores(candidates);
+		
+		return candidates.map((track, index) => {
+			const similarityScore =
+				getSimilarityScore(index, candidates.length);
+			
+			const personalizationScore =
+				personalizationScores[index];
+			
+			const finalScore =
+				getFinalSimilarityScore(
+					similarityScore,
+					personalizationScore
+				);
+			
+			return {
+				track,
+				similarityScore,
+				personalizationScore,
+				finalScore
+			};
+		});
+	}
+	
+	window.testScoreSimilarCandidates = scoreSimilarCandidates;
+	
 	window.testFinalSimilarityScore = getFinalSimilarityScore;
 
 	function getSimilarityScore(index, totalCandidates) {
