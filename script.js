@@ -362,9 +362,30 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			.sort((a, b) => b.score - a.score);
 	}
 
-  function saveHistory(history) {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
-  }
+	function getRepetitionFactor(track) {
+		if (!track) return 1;
+		
+		const stats = getHistoryStats();
+		
+		const trackId = [
+			track.provider || "unknown",
+			track.providerId || track.id || ""
+		].join(":");
+		
+		const trackStats = stats.tracks[trackId];
+		
+		if (!trackStats) return 1;
+		
+		const plays = trackStats.plays || 0;
+		
+		return 1 / (1 + plays);
+	}
+
+	window.testRepetitionFactor = getRepetitionFactor;
+	
+	function saveHistory(history) {
+		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+	}
 
   // Genre lagu dari Deezer tidak ikut di hasil pencarian (lihat catatan di
   // api/deezer-genre.js), jadi baru diambil pas lagunya benar-benar diputar,
