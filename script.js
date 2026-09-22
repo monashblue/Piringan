@@ -733,15 +733,17 @@ function normalizeTrack(track) {
           combined.push(t);
         });
       });
-
-      renderTrackList(recommendListEl, combined.slice(0, 10), "recommend");
-    } catch (err) {
-      recommendListEl.innerHTML = "";
-      const p = document.createElement("p");
-      p.className = "empty-note";
-      p.textContent = "Gagal memuat rekomendasi.";
-      recommendListEl.appendChild(p);
-    }
+		
+		renderTrackList(recommendListEl, combined.slice(0, 10), "recommend");
+    } 
+		
+	catch (err) {
+		recommendListEl.innerHTML = "";
+		const p = document.createElement("p");
+		p.className = "empty-note";
+		p.textContent = "Gagal memuat rekomendasi.";
+		recommendListEl.appendChild(p);
+	}
   }
 
   async function loadSimilarSongs(track) {
@@ -770,9 +772,15 @@ function normalizeTrack(track) {
 				provider: "deezer"
 			}));
 
+		const scored = scoreSimilarCandidates(candidates);
+		
+		const combined = scored
+			.sort((a, b) => b.finalScore - a.finalScore)
+			.map(item => item.track);
+
 		window.testSimilarCandidates = candidates;
 		console.log("SIMILAR CANDIDATES:", candidates);
-		renderTrackList(similarListEl, candidates, "similar");
+		renderTrackList(similarListEl, combined, "similar");
 	} 
 		
 	catch (err) {
