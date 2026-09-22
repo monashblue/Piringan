@@ -765,7 +765,10 @@ function normalizeTrack(track) {
 		
 		const candidates = (data.tracks || [])
 			.filter((t) => t.id !== track.id)
-			.map(normalizeTrack);
+			.map(t => normalizeTrack({
+				...t,
+				provider: "deezer"
+			}));
 
 		window.testSimilarCandidates = candidates;
 		console.log("SIMILAR CANDIDATES:", candidates);
