@@ -465,6 +465,37 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			};
 		});
 	}
+
+	function filterSimilarCandidates(candidates, currentTrack) {
+		const seen = new Set();
+		
+		const currentKey = currentTrack
+			? [
+				currentTrack.provider || "unknown",
+				currentTrack.providerId || currentTrack.id || ""
+			].join(":")
+			: null;
+		
+		return candidates.filter(track => {
+			const key = [
+				track.provider || "unknown",
+				track.providerId || track.id || ""
+			].join(":");
+			
+			if (currentKey && key === currentKey) {
+				return false;
+			}
+			
+			if (seen.has(key)) {
+				return false;
+			}
+			
+			seen.add(key);
+			return true;
+		});
+	}
+	
+	window.testFilterSimilarCandidates = filterSimilarCandidates;
 	
 	window.testScoreSimilarCandidates = scoreSimilarCandidates;
 	
