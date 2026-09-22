@@ -766,13 +766,15 @@ function normalizeTrack(track) {
 		const data = await fetchRelated(track.artistId);
 		
 		const candidates = (data.tracks || [])
-			.filter((t) => t.id !== track.id)
 			.map(t => normalizeTrack({
 				...t,
 				provider: "deezer"
 			}));
 
-		const scored = scoreSimilarCandidates(candidates);
+		const filteredCandidates =
+			filterSimilarCandidates(candidates, track);
+
+		const scored = scoreSimilarCandidates(filteredCandidates);
 		
 		const combined = scored
 			.sort((a, b) => b.finalScore - a.finalScore)
