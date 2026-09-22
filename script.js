@@ -322,9 +322,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 			.sort((a, b) => b.plays - a.plays);
 	}
 
-	console.log("C2 LOADED");
-	window.testArtistPreferences = getArtistPreferences;
-
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   }
