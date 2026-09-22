@@ -338,7 +338,21 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		return Math.pow(0.5, ageInDays / halfLifeDays);
 	}
 
+	function getWeightedGenrePreferences() {
+		const stats = getHistoryStats();
+		
+		return Object.values(stats.genres)
+			.map(genre => ({
+				...genre,
+				recencyWeight: getRecencyWeight(genre.lastPlayedAt),
+				score: genre.plays * getRecencyWeight(genre.lastPlayedAt)
+			}))
+			.sort((a, b) => b.score - a.score);
+	}
+
 	window.testRecencyWeight = getRecencyWeight;
+	window.testWeightedGenrePreferences =
+		getWeightedGenrePreferences;
 
   function saveHistory(history) {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
