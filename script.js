@@ -527,6 +527,26 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
 	}
 
+	const DAILY_RECOMMENDATION_KEY = "piringan_daily_recommendation";
+	
+	function getDailyRecommendation() {
+		try {
+			return JSON.parse(
+				localStorage.getItem(DAILY_RECOMMENDATION_KEY)
+			) || null;
+		} catch (err) {
+			console.error("Failed to read daily recommendation:", err);
+			return null;
+		}
+	}
+	
+	function saveDailyRecommendation(data) {
+		localStorage.setItem(
+			DAILY_RECOMMENDATION_KEY,
+			JSON.stringify(data)
+		);
+	}
+
   // Genre lagu dari Deezer tidak ikut di hasil pencarian (lihat catatan di
   // api/deezer-genre.js), jadi baru diambil pas lagunya benar-benar diputar,
   // bukan buat semua baris hasil pencarian sekaligus. Hasilnya di-cache per
