@@ -415,22 +415,6 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		return baseScore * repetitionFactor;
 	}
 
-	function normalizeCandidateScores(candidates) {
-		if (!candidates.length) return [];
-		
-		const scores = candidates.map(track =>
-			getCandidateScore(track)
-									 );
-		
-		const maxScore = Math.max(...scores);
-		
-		if (maxScore <= 0) {
-			return candidates.map(() => 0);
-		}
-		
-		return scores.map(score => score / maxScore);
-	}
-
 	function getFinalSimilarityScore(similarityScore, personalizationScore) {
 		return (
 			(similarityScore * 0.6) +
