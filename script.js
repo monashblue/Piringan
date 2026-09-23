@@ -712,43 +712,53 @@ function normalizeTrack(track) {
   }
 
   async function loadRecommendations() {
-    const topArtistIds = getTopArtistIds(3);
-
-    if (!topArtistIds.length) {
-      recommendListEl.innerHTML = "";
-      const p = document.createElement("p");
-      p.className = "empty-note";
-      p.textContent = "Putar beberapa lagu dari hasil pencarian dulu, nanti rekomendasi muncul di sini.";
-      recommendListEl.appendChild(p);
-      return;
-    }
-
-    try {
-      const historyIds = new Set(getHistory().map((entry) => entry.id));
-      const results = await Promise.all(
-        topArtistIds.map((id) => fetchRelated(id).catch(() => null))
-      );
-
-      const seen = new Set();
-      const combined = [];
-      results.filter(Boolean).forEach((data) => {
-        (data.tracks || []).forEach((t) => {
-          if (historyIds.has(t.id) || seen.has(t.id)) return;
-          seen.add(t.id);
-          combined.push(t);
-        });
-      });
-		
-		renderTrackList(recommendListEl, combined.slice(0, 10), "recommend");
-    } 
-		
-	catch (err) {
-		recommendListEl.innerHTML = "";
-		const p = document.createElement("p");
-		p.className = "empty-note";
-		p.textContent = "Gagal memuat rekomendasi.";
-		recommendListEl.appendChild(p);
-	}
+	  const dailyRecommendation = getDailyRecommendation();
+	  
+	  if (isDailyRecommendationValid(dailyRecommendation)) {
+		  renderTrackList(
+			  recommendListEl,
+			  dailyRecommendation.tracks,
+			  "recommend"
+		  );
+		  return;
+	  }
+	  const topArtistIds = getTopArtistIds(3);
+	  
+	  if (!topArtistIds.length) {
+		  recommendListEl.innerHTML = "";
+		  const p = document.createElement("p");
+		  p.className = "empty-note";
+		  p.textContent = "Putar beberapa lagu dari hasil pencarian dulu, nanti rekomendasi muncul di sini.";
+		  recommendListEl.appendChild(p);
+		  return;
+	  }
+	  
+	  try {
+		  const historyIds = new Set(getHistory().map((entry) => entry.id));
+		  const results = await Promise.all(
+			  topArtistIds.map((id) => fetchRelated(id).catch(() => null))
+		  );
+		  
+		  const seen = new Set();
+		  const combined = [];
+		  results.filter(Boolean).forEach((data) => {
+			  (data.tracks || []).forEach((t) => {
+				  if (historyIds.has(t.id) || seen.has(t.id)) return;
+				  seen.add(t.id);
+				  combined.push(t);
+			  });
+		  });
+		  
+		  renderTrackList(recommendListEl, combined.slice(0, 10), "recommend");
+	  } 
+	  
+	  catch (err) {
+		  recommendListEl.innerHTML = "";
+		  const p = document.createElement("p");
+		  p.className = "empty-note";
+		  p.textContent = "Gagal memuat rekomendasi.";
+		  recommendListEl.appendChild(p);
+	  }
   }
 
   async function loadSimilarSongs(track) {
