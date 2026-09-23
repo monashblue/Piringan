@@ -785,6 +785,8 @@ function normalizeTrack(track) {
 			.sort((a, b) => b.finalScore - a.finalScore)
 			.map(item => item.track);
 
+		renderTrackList(similarListEl, combined, "similar");
+
 	} 
 		
 	catch (err) {
