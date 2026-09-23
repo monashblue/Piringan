@@ -775,8 +775,6 @@ function normalizeTrack(track) {
 			.sort((a, b) => b.finalScore - a.finalScore)
 			.map(item => item.track);
 
-		console.log("SIMILAR CANDIDATES:", candidates);
-		renderTrackList(similarListEl, combined, "similar");
 	} 
 		
 	catch (err) {
