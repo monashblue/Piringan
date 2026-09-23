@@ -531,6 +531,16 @@ const genreCache = getGenreCache(); // albumId -> nama genre (string) atau null
 		);
 	}
 
+	function isDailyRecommendationValid(data) {
+		if (!data || !data.date || !Array.isArray(data.tracks)) {
+			return false;
+		}
+		
+		const today = new Date().toISOString().slice(0, 10);
+		
+		return data.date === today;
+	}
+
   // Genre lagu dari Deezer tidak ikut di hasil pencarian (lihat catatan di
   // api/deezer-genre.js), jadi baru diambil pas lagunya benar-benar diputar,
   // bukan buat semua baris hasil pencarian sekaligus. Hasilnya di-cache per
